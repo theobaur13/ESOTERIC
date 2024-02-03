@@ -1,8 +1,8 @@
 from models import Claim
 
-class ClaimDetector:
+class ClaimGenerator:
     def __init__(self):
         pass
 
-    def detect_claims(self, text):
+    def generate_claims(self, text):
         return Claim(text)

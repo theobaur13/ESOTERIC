@@ -1,4 +1,4 @@
-import json, os
+import json
 from models import Evidence
 
 class EvidenceRetriever:
@@ -14,4 +14,5 @@ class EvidenceRetriever:
 
     def retrieve_evidence(self, claim):
         evidence = self.data
-        return Evidence(claim, evidence)
+        score = 1
+        return Evidence(claim, evidence, score)
