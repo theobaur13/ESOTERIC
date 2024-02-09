@@ -4,10 +4,10 @@ from evidence_retrieval import EvidenceRetriever
 
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    dataset_path = os.path.join(current_dir, '..', 'data', 'train2.jsonl')
+    data_path = os.path.join(current_dir, '..', 'data')
 
     claim_detector = ClaimGenerator()
-    evidence_retriever = EvidenceRetriever(dataset_path)
+    evidence_retriever = EvidenceRetriever(data_path)
 
     input_claim = input("Enter claim: ")
 
