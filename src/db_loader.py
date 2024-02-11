@@ -9,6 +9,13 @@ def main():
 
     conn = sqlite3.connect(os.path.join(database_path, 'wiki-pages.db'))
 
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS documents(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        doc_id TEXT NOT NULL,
+        text TEXT NOT NULL);
+        ''')
+
     # import jsonl file by file into the db
     file_list = os.listdir(dataset_path)
     for file in file_list:
@@ -19,12 +26,6 @@ def main():
             with open(file_path) as f:
                 for line in f:
                     data = json.loads(line)
-                    conn.execute('''
-                                CREATE TABLE IF NOT EXISTS documents(
-                                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                doc_id TEXT NOT NULL,
-                                text TEXT NOT NULL);
-                                ''')
                     conn.execute("INSERT INTO documents (doc_id, text) VALUES (?, ?)", (data['id'], data['text']))
         else:
             raise ValueError('Unsupported file format')

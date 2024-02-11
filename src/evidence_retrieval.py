@@ -5,7 +5,7 @@ import dask.dataframe as dd
 import os
 
 class EvidenceRetriever:
-    def __init__(self, data_path, batch_size=1000):
+    def __init__(self, data_path, batch_size=100000):
         self.data_path = data_path
         self.batch_size = batch_size
         self.last_file_loaded = None
@@ -15,7 +15,7 @@ class EvidenceRetriever:
     def load_data(self, data_path, batch_size):
         connection = 'sqlite:///' + os.path.join(data_path, 'wiki-pages.db')
         df = dd.read_sql_table('documents', connection, index_col='id', npartitions=1)
-        df = df.head(batch_size, compute=False)
+        #df = df.head(batch_size, compute=False)
         return df
 
     def retrieve_evidence(self, claim):
