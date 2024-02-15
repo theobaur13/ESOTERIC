@@ -3,11 +3,11 @@ class Claim:
         self.text = text
 
 class Evidence:
-    def __init__(self, claim, evidence, score=0, id=None):
-        self.id = id
+    def __init__(self, claim, evidence_sentence, score=0, doc_id=None):
         self.claim = claim
-        self.evidence = evidence
+        self.doc_id = doc_id
         self.score = score
+        self.evidence_sentence = evidence_sentence
 
 class EvidenceWrapper:
     def __init__(self):

@@ -14,10 +14,9 @@ def main():
     claim = claim_detector.generate_claims(input_claim)
     evidence_collection = evidence_retriever.retrieve_evidence(claim)
 
-    print("Claim: " + claim.text)
-    print("Evidence:")
+    print("Claim:", claim.text)
     for evidence in evidence_collection.get_evidences():
-        print(evidence.evidence + " - " + str(evidence.score) + " - " + str(evidence.id))
+        print("Doc ID:",  evidence.doc_id, "Score:", str(evidence.score), "Evidence:", evidence.evidence_sentence)
 
 if __name__ == '__main__':
     main()

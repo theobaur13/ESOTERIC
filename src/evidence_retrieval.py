@@ -10,16 +10,21 @@ class EvidenceRetriever:
         self.connection = sqlite3.connect(os.path.join(self.data_path, 'wiki-pages.db'))
 
     def retrieve_evidence(self, claim):
-        e_l_docs = self.entity_linking(claim)
-        print(e_l_docs)
         evidence_wrapper = EvidenceWrapper()
-        evidence_wrapper.add_evidence(Evidence(claim.text, 'This is a test evidence', 0.9, 'test-id'))
+
+        e_l_docs = self.entity_linking(claim)
+        for doc in e_l_docs:
+            id = doc[0]
+            score = doc[1]
+            evidence = Evidence(claim, None, score, id)
+            evidence_wrapper.add_evidence(evidence)
+
         return evidence_wrapper
 
     def entity_linking(self, claim):
         claim_TF_IDF_df = TF_IDF(claim.text)
-        docs = cosine_similarity(claim_TF_IDF_df, self.connection)
-        return docs
+        docs_scores = cosine_similarity(claim_TF_IDF_df, self.connection)
+        return docs_scores
 
     def claim_doc_similarity(self, claim):
         # return all doc_ids

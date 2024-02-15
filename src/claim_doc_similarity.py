@@ -15,6 +15,7 @@ def TF_IDF(claim):
     return df
 
 def cosine_similarity(claim_TF_IDF_matrix, conn):
+    print("Calculating cosine similarity between TF-IDF matrix of claim and TF-IDF matrix of documents in the database")
     # connect to the database
     cursor = conn.cursor()
 
@@ -86,12 +87,12 @@ def cosine_similarity(claim_TF_IDF_matrix, conn):
 
             # add to highest_similarity if similarity_score is higher than the lowest score in highest_similarity
             if len(highest_similarity) < 5:
-                highest_similarity.append((doc_id, similarity_score))
+                highest_similarity.append([doc_id, similarity_score])
                 highest_similarity = sorted(highest_similarity, key=lambda x: x[1], reverse=True)
             else:
                 if similarity_score > highest_similarity[-1][1]:
                     highest_similarity.pop()
-                    highest_similarity.append((doc_id, similarity_score))
+                    highest_similarity.append([doc_id, similarity_score])
                     highest_similarity = sorted(highest_similarity, key=lambda x: x[1], reverse=True)
-
+    
     return highest_similarity
