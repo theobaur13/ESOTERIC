@@ -13,7 +13,8 @@ class EvidenceRetriever:
         evidence_wrapper = EvidenceWrapper()
 
         e_l_docs = self.entity_linking(claim)
-        for doc in e_l_docs:
+        c_d_s_docs = self.claim_doc_similarity(claim)
+        for doc in c_d_s_docs:
             id = doc[0]
             score = doc[1]
             evidence = Evidence(claim, None, score, id)
@@ -22,10 +23,9 @@ class EvidenceRetriever:
         return evidence_wrapper
 
     def entity_linking(self, claim):
+        pass
+
+    def claim_doc_similarity(self, claim):
         claim_TF_IDF_df = TF_IDF(claim.text)
         docs_scores = cosine_similarity(claim_TF_IDF_df, self.connection)
         return docs_scores
-
-    def claim_doc_similarity(self, claim):
-        # return all doc_ids
-        pass
