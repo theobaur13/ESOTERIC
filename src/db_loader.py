@@ -17,7 +17,6 @@ def main(batch_limit=None):
     clear = input("Do you want to clear the database? (y/n): ")
     if clear.lower() == 'y':
         cursor.execute("DROP TABLE IF EXISTS documents")
-        cursor.execute("DROP TABLE IF EXISTS terms")
         cursor.execute("DROP TABLE IF EXISTS tf_idf")
         conn.commit()
 
@@ -31,30 +30,23 @@ def main(batch_limit=None):
         ''')
     
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS terms(
-        term_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        term TEXT NOT NULL UNIQUE);
-        ''')
-    
-    cursor.execute('''
         CREATE TABLE IF NOT EXISTS tf_idf(
-        term_id INTEGER NOT NULL,
         doc_id INTEGER NOT NULL,
+        term TEXT NOT NULL,
         tf_idf_score REAL NOT NULL,
-        FOREIGN KEY(term_id) REFERENCES terms(term_id),
         FOREIGN KEY(doc_id) REFERENCES documents(id),
-        PRIMARY KEY(term_id, doc_id));
+        PRIMARY KEY(term, doc_id));
         ''')
     
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_doc_id ON documents(doc_id);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tf_idf_term_id ON tf_idf(term_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_tf_idf_doc_id ON tf_idf(doc_id);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tf_idf_term_doc ON tf_idf(term_id, doc_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tf_idf_term_doc ON tf_idf(term, doc_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tf_idf_term ON tf_idf(term);")
         
     doc_ids = []
     documents = []
 
-    TF_IDF_vectoriser = TfidfVectorizer()
+    TF_IDF_vectoriser = TfidfVectorizer(strip_accents='ascii')
 
     # import jsonl file by file into the db
     print("Loading " + str(batch_limit) + " documents into database")
@@ -83,23 +75,14 @@ def main(batch_limit=None):
     print("Applying feature names to TF IDF matrix")
     feature_names = TF_IDF_vectoriser.get_feature_names_out()
 
-    print ("Loading terms into database")
-    for term in tqdm(feature_names):
-        cursor.execute("INSERT OR IGNORE INTO terms (term) VALUES (?)", (term,))
-    conn.commit()
-
-    print ("Creating term mappings")
-    cursor.execute("SELECT term_id, term FROM terms")
-    term_mapping = {term: term_id for term_id, term in tqdm(cursor.fetchall())}
-
     print("Calculating TF-IDF values")
     bulk_data = []
     for doc_index, doc_id in enumerate(tqdm(doc_ids)):
         for term_index in TF_IDF_matrix[doc_index].nonzero()[1]:
-            term_id = term_mapping[feature_names[term_index]]
+            term = feature_names[term_index]
             tf_idf_score = TF_IDF_matrix[doc_index, term_index]
-            bulk_data.append((term_id, doc_id, tf_idf_score))
-    
+            bulk_data.append((doc_id, term, tf_idf_score))
+
     print("Loading TF-IDF values into database")
     conn.execute("PRAGMA synchronous = OFF")
     conn.execute("PRAGMA journal_mode = OFF")
@@ -114,8 +97,8 @@ def main(batch_limit=None):
         start_index = i * chunk_size
         end_index = start_index + chunk_size
         chunk = bulk_data[start_index:end_index]
-        cursor.executemany("INSERT INTO tf_idf (term_id, doc_id, tf_idf_score) VALUES (?, (SELECT id FROM documents WHERE doc_id = ?), ?)", chunk)
-
+        cursor.executemany("INSERT INTO tf_idf (doc_id, term, tf_idf_score) VALUES ((SELECT id FROM documents WHERE doc_id = ?), ?, ?)", chunk)
+    
     conn.commit()
 
     end_time = time.time()
