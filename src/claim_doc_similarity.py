@@ -1,12 +1,11 @@
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from tqdm import tqdm
-import os
-import sqlite3
 import numpy as np
 import polars as pl
+from sklearn.feature_extraction.text import TfidfVectorizer
+from tqdm import tqdm
 
 def TF_IDF(claim):
+    print("Calculating TF-IDF matrix of claim")
     corpus = [claim]
     vectoriser = TfidfVectorizer(strip_accents='ascii')
     TF_IDF_matrix = vectoriser.fit_transform(corpus)
@@ -30,7 +29,7 @@ def cosine_similarity(claim_TF_IDF_matrix, conn):
         WHERE term IN ({formatted_terms})
     """)
     doc_ids = [row[0] for row in cursor.fetchall()]
-    print("Selected", len(doc_ids), "doc_ids")
+    print("Selected", len(doc_ids), "documents to compare")
 
     # get list of all unique relevant terms in the tf_idf table
     cursor.execute(f"""
@@ -39,6 +38,7 @@ def cosine_similarity(claim_TF_IDF_matrix, conn):
         WHERE doc_id IN (SELECT DISTINCT doc_id FROM tf_idf WHERE term IN ({formatted_terms}))
     """)
     terms = [row[0] for row in cursor.fetchall()]
+    terms.extend(claim_terms)
 
     # add all terms to the claim_TF_IDF_matrix
     missing_terms = list(set(terms) - set(claim_TF_IDF_matrix.columns))

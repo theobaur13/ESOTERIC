@@ -1,10 +1,10 @@
 import os
 import sqlite3
 import json
-from sklearn.feature_extraction.text import TfidfVectorizer
-from tqdm import tqdm
 import time
 import argparse
+from sklearn.feature_extraction.text import TfidfVectorizer
+from tqdm import tqdm
 
 def main(batch_limit=None):
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +28,7 @@ def main(batch_limit=None):
         doc_id TEXT NOT NULL,
         text TEXT NOT NULL);
         ''')
-    
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS tf_idf(
         doc_id INTEGER NOT NULL,
@@ -37,12 +37,12 @@ def main(batch_limit=None):
         FOREIGN KEY(doc_id) REFERENCES documents(id),
         PRIMARY KEY(term, doc_id));
         ''')
-    
+
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_doc_id ON documents(doc_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_tf_idf_doc_id ON tf_idf(doc_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_tf_idf_term_doc ON tf_idf(term, doc_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_tf_idf_term ON tf_idf(term);")
-        
+
     doc_ids = []
     documents = []
 
@@ -57,7 +57,7 @@ def main(batch_limit=None):
 
     for file in tqdm(file_list):
         file_path = os.path.join(dataset_path, file)
-        
+
         if file_path.endswith('.jsonl'):
             with open(file_path) as f:
                 for line in f:
