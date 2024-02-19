@@ -3,3 +3,4 @@ __pycache__/
 wiki-pages/
 wiki-pages.db
 wiki-pages.db-journal
+faiss_index
