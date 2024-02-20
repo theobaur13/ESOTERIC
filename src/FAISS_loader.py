@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 def main(batch_size=999):
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    dataset_path = os.path.join(current_dir, '..', 'data', 'wiki-pages')
     database_path = os.path.join(current_dir, '..', 'data')
     conn = sqlite3.connect(os.path.join(database_path, 'wiki-pages.db'))
     cursor = conn.cursor()

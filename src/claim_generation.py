@@ -48,7 +48,7 @@ class ClaimGenerator:
     
     def generate_questions(self, focal_points):
         print("Generating questions from focal points")
-        questions = []
+        questions = [self.text]
 
         for focal_point in focal_points:
             focal_text = focal_point[0]
