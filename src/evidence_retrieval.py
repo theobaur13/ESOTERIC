@@ -14,7 +14,7 @@ class EvidenceRetriever:
         claucy.add_to_pipe(self.triple_extraction_model)
 
     def retrieve_evidence(self, claim):
-        evidence_wrapper = EvidenceWrapper()
+        evidence_wrapper = EvidenceWrapper(claim)
 
         e_l_dict = self.entity_linking(claim)
         cursor = self.connection.cursor()
@@ -23,13 +23,6 @@ class EvidenceRetriever:
             text = cursor.fetchone()[0]
             evidence = Evidence(claim, text, score, doc_id)
             evidence_wrapper.add_evidence(evidence)
-
-        # c_d_s_docs = self.claim_doc_similarity(claim)
-        # for doc in c_d_s_docs:
-        #     id = doc[0]
-        #     score = doc[1]
-        #     evidence = Evidence(claim, None, score, id)
-        #     evidence_wrapper.add_evidence(evidence)
 
         return evidence_wrapper
 
