@@ -20,9 +20,11 @@ def main():
             evidence_collection.add_evidence(e)
 
     for claim in claims.get_claims():
-        print("Claim:", claim.text)
+        print("Extracted question:", claim.text)
     for evidence in evidence_collection.get_evidences():
-        print("Doc ID:",  evidence.doc_id, "Score:", str(evidence.score), "Evidence:", evidence.evidence_sentence)
-
+        print("\nClaim:", evidence.claim.text)
+        print("Evidence:", evidence.evidence_sentence)
+        print("Score:", str(evidence.score))
+        print("Doc ID:", evidence.doc_id)
 if __name__ == '__main__':
     main()

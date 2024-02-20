@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import spacy
+import claucy
 from models import Evidence, EvidenceWrapper
 from entity_linking import triple_extraction, FAISS_search
 from claim_doc_similarity import TF_IDF, cosine_similarity
@@ -11,6 +12,7 @@ class EvidenceRetriever:
         self.data_path = data_path
         self.connection = sqlite3.connect(os.path.join(self.data_path, 'wiki-pages.db'))
         self.triple_extraction_model = spacy.load('en_core_web_sm')
+        claucy.add_to_pipe(self.triple_extraction_model)
 
     def retrieve_evidence(self, claim):
         evidence_wrapper = EvidenceWrapper()
@@ -33,13 +35,13 @@ class EvidenceRetriever:
         return evidence_wrapper
 
     def entity_linking(self, claim):
-        print("Starting document retrieval by entity linking")
-        triples = triple_extraction(claim.text, self.triple_extraction_model)
+        print("Starting document retrieval by entity linking for claim:", claim.text)
+        # triples = triple_extraction(claim.text, self.triple_extraction_model)
         doc_ids = FAISS_search(claim.text, self.data_path)
         return doc_ids
 
     def claim_doc_similarity(self, claim):
-        print("Starting document retrieval by claim-document similarity")
+        print("Starting document retrieval by claim-document similarity for claim:", claim.text)
         claim_TF_IDF_df = TF_IDF(claim.text)
         docs_scores = cosine_similarity(claim_TF_IDF_df, self.connection)
         return docs_scores

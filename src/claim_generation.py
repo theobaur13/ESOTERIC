@@ -10,7 +10,7 @@ class ClaimGenerator:
         print("Initialising ClaimGenerator")
         self.text = claim
         self.nlp = spacy.load('en_core_web_sm')
-        self.pipe = pipeline("text2text-generation", model="iarfmoose/t5-base-question-generator")
+        self.pipe = pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-question-generation-ap")
 
     def generate_claims(self):
         focal_points = self.extract_focals()
@@ -55,11 +55,11 @@ class ClaimGenerator:
 
         for focal_point in focal_points:
             focal_text = focal_point[0]
-            pipe_string = "<answer> " + str(focal_text) + " <context> " + str(self.text)
+            pipe_string = "answer: " + str(focal_text) + " context: " + str(self.text)
 
             output = self.pipe(pipe_string)
-
-            question = output[0]["generated_text"]
+            
+            question = output[0]['generated_text'].split("question: ")[1]
             questions.append(question)
         return questions
     
