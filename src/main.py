@@ -1,3 +1,12 @@
+import logging
+logging.basicConfig(level=logging.WARNING)
+
+from transformers.utils import logging
+logging.set_verbosity_error()
+
+import warnings
+warnings.filterwarnings("ignore")
+
 import os
 from claim_generation import ClaimGenerator
 from evidence_retrieval import EvidenceRetriever
@@ -26,5 +35,6 @@ def main():
         print("Evidence:", evidence.evidence_sentence)
         print("Score:", str(evidence.score))
         print("Doc ID:", evidence.doc_id)
+
 if __name__ == '__main__':
     main()

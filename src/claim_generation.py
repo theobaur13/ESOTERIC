@@ -1,13 +1,9 @@
 import spacy
 from models import Claim, ClaimWrapper
 from transformers import pipeline
-import warnings
-
-warnings.filterwarnings("ignore", category=UserWarning, module='transformers')
 
 class ClaimGenerator:
     def __init__(self, claim):
-        print("Initialising ClaimGenerator")
         self.text = claim
         self.nlp = spacy.load('en_core_web_sm')
         self.pipe = pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-question-generation-ap")
@@ -47,6 +43,7 @@ class ClaimGenerator:
                     subtree = [t.text for t in token.subtree]
                     subtrees.append([" ".join(subtree), token.dep_])
 
+        print("Focal points:", subtrees, "extracted.")
         return subtrees
     
     def generate_questions(self, focal_points):
@@ -61,6 +58,8 @@ class ClaimGenerator:
             
             question = output[0]['generated_text'].split("question: ")[1]
             questions.append(question)
+        
+        print("Questions generated:", questions)
         return questions
     
     def reranking(self, questions):
