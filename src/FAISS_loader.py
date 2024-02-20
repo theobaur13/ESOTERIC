@@ -18,6 +18,7 @@ def main(batch_size=999):
     # Load the documents from the database in batches
     cursor.execute("SELECT id FROM documents")
     ids = [row[0] for row in cursor.fetchall()]
+    ids.sort()
 
     id_batches = [ids[i:i+batch_size] for i in range(0, len(ids), batch_size)]
 

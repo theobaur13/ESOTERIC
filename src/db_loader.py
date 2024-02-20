@@ -36,10 +36,10 @@ def main(batch_limit=None):
     # import jsonl file by file into the db
     print("Loading " + str(batch_limit) + " documents into database")
     file_list = os.listdir(dataset_path)
-
+    
     if batch_limit:
         file_list = file_list[:batch_limit]
-
+    
     for file in tqdm(file_list):
         file_path = os.path.join(dataset_path, file)
 
