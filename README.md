@@ -1,6 +1,8 @@
 # nlp-automated-fact-checker
 A command line application that uses natural language processing tools to retrieve relevant evidence sentences for a given input claim from the FEVER dataset.
 
+This application unfinished and is still in development as of 21/02/2024.
+
 ## Installation
 Clone repository.
 
