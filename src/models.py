@@ -49,3 +49,6 @@ class EvidenceWrapper:
     
     def get_claim(self):
         return self.claim
+    
+    def remove_evidence(self, evidence):
+        self.evidences.remove(evidence)
