@@ -64,12 +64,12 @@ py main.py
 ```
 Enter a claim.
 
-```python
+```
 Enter claim: Luton Town won the English Premier League in 1990
 ```
 Results:
 
-```python
+```
 Base claim: luton town won the english premier league in 1990
 Extracted question: What team won the english premier league in 1990?
 Extracted question: What league did luton town win in 1990?
