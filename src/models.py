@@ -3,22 +3,33 @@ class Claim:
         self.text = text
 
 class ClaimWrapper:
-    def __init__(self):
-        self.claims = []
+    def __init__(self, base_claim):
+        self.base_claim = base_claim
+        self.subclaims = []
 
     def add_claim(self, claim):
-        self.claims.append(claim)
+        self.subclaims.append(claim)
 
     def get_claims(self):
-        return self.claims
+        return [self.base_claim] + self.subclaims
+    
+    def get_base_claim(self):
+        return self.base_claim
+    
+    def get_subclaims(self):
+        return self.subclaims
 
 class Evidence:
-    def __init__(self, claim, evidence_sentence, score=0, doc_id=None, wiki_url=None):
+    def __init__(self, claim, evidence_text, score=0, doc_id=None, wiki_url=None, evidence_sentence=None):
         self.claim = claim
         self.doc_id = doc_id
         self.score = score
-        self.evidence_sentence = evidence_sentence
+        self.evidence_text = evidence_text
         self.wiki_url = wiki_url
+        self.evidence_sentence = evidence_sentence
+
+    def set_evidence_sentence(self, evidence_sentence):
+        self.evidence_sentence = evidence_sentence
 
     def set_wiki_url(self, conn):
         cursor = conn.cursor()
@@ -35,3 +46,6 @@ class EvidenceWrapper:
 
     def get_evidences(self):
         return self.evidences
+    
+    def get_claim(self):
+        return self.claim

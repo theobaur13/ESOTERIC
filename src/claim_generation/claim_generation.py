@@ -12,10 +12,12 @@ class ClaimGenerator:
         focal_points = self.extract_focals()
         questions = self.generate_questions(focal_points)
 
-        claim_wrapper = ClaimWrapper()
+        base_claim = Claim(self.text)
+        claim_wrapper = ClaimWrapper(base_claim)
+
         for question in questions:
             claim = Claim(question)
-            claim_wrapper.claims.append(claim)
+            claim_wrapper.add_claim(claim)
 
         return claim_wrapper
 
@@ -48,7 +50,7 @@ class ClaimGenerator:
     
     def generate_questions(self, focal_points):
         print("Generating questions from focal points")
-        questions = [self.text]
+        questions = []
 
         for focal_point in focal_points:
             focal_text = focal_point[0]
