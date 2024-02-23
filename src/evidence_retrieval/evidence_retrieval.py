@@ -21,7 +21,7 @@ class EvidenceRetriever:
         return evidence
 
     def retrieve_documents(self, claim):
-        print("Starting document retrieval by entity linking for claim: '" + str(claim.text) + "'")
+        print("Starting document retrieval for claim: '" + str(claim.text) + "'")
         evidence_wrapper = EvidenceWrapper(claim)
         # triples = triple_extraction(claim.text, self.triple_extraction_model)
         e_l_dict = FAISS_search(claim.text, self.data_path)
