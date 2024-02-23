@@ -3,7 +3,7 @@ import os
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parents[1] / 'src'))
-from claim_generation.query_generation import QueryGenerator
+from query_generation.query_generation import QueryGenerator
 from evidence_retrieval.evidence_retrieval import EvidenceRetriever
 from models import Query, QueryWrapper, Evidence, EvidenceWrapper
 
