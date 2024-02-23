@@ -3,10 +3,13 @@ from models import Claim, ClaimWrapper
 from transformers import pipeline
 
 class ClaimGenerator:
-    def __init__(self, claim):
+    def __init__(self, claim=""):
         self.text = claim
         self.nlp = spacy.load('en_core_web_sm')
         self.pipe = pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-question-generation-ap")
+
+    def set_claim(self, claim):
+        self.text = claim
 
     def generate_claims(self):
         focal_points = self.extract_focals()

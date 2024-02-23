@@ -34,7 +34,7 @@ class EvidenceRetriever:
             evidence_wrapper.add_evidence(evidence)
 
         return evidence_wrapper
-    
+
     def retrieve_passages(self, evidence_wrapper):
         answerability_filter(evidence_wrapper, self.answerability_pipe)
         return evidence_wrapper

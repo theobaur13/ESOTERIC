@@ -20,7 +20,7 @@ def triple_extraction(claim, nlp):
 
 def FAISS_search(claim, data_path):
     print("Searching for documents close to triple '" + str(claim) + "' using FAISS")
-    model = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L6-v2")
+    model = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L3-v2")
     query_vector = model.encode([claim])
     k = 5
     index = faiss.read_index(os.path.join(data_path, 'faiss_index'))

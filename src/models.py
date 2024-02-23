@@ -1,5 +1,8 @@
 class Claim:
-    def __init__(self, text):
+    def __init__(self, text=""):
+        self.text = text
+
+    def set_text(self, text):
         self.text = text
 
 class ClaimWrapper:

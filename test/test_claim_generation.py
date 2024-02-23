@@ -1,15 +1,5 @@
-# import unittest
-
-# from claim_generation.claim_generation import ClaimGenerator
-
-# class TestClaimDetection(unittest.TestCase):
-#     def setUp(self):
-#         self.claim_generator = ClaimGenerator()
-
-#     def test_generate_with_valid_claim(self):
-#         # test with a claim that should return claims
-#         claim = self.claim_generator.generate_claims("The Earth is round")
-#         self.assertIsNotNone(claim)
-
-# if __name__ == '__main__':
-#     unittest.main()
+def test_generate_with_valid_claim(claim_generator):
+    claim = "The moon is made of cheese."
+    claim_generator.set_claim(claim)
+    result = claim_generator.generate_claims()
+    assert result is not None

@@ -11,7 +11,7 @@ def main(batch_size=999):
     conn = sqlite3.connect(os.path.join(database_path, 'wiki-pages.db'))
     cursor = conn.cursor()
 
-    model = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L6-v2")
+    model = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L3-v2")
     index = faiss.IndexIDMap(faiss.IndexFlatIP(384))
 
     # Load the documents from the database in batches
@@ -24,6 +24,7 @@ def main(batch_size=999):
     for batch in tqdm(id_batches):
         cursor.execute("SELECT text FROM documents WHERE id IN ({})".format(','.join(['?']*len(batch))), batch)
         data = cursor.fetchall()
+
         docs = [row[0] for row in data]
 
         encoded_docs = model.encode(docs)
