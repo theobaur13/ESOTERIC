@@ -1,30 +1,38 @@
-class Claim:
-    def __init__(self, text=""):
+class Query:
+    def __init__(self, text="", creation_method=""):
         self.text = text
+        self.creation_method = creation_method
 
     def set_text(self, text):
         self.text = text
 
-class ClaimWrapper:
+    def set_creation_method(self, creation_method):
+        creation_methods = ["NER", "TE", "VF"]
+        if creation_method in creation_methods:
+            self.creation_method = creation_method
+        else:
+            raise ValueError("Invalid creation method. Must be one of: " + ", ".join(creation_methods))
+
+class QueryWrapper:
     def __init__(self, base_claim):
         self.base_claim = base_claim
-        self.subclaims = []
+        self.subqueries = []
 
-    def add_claim(self, claim):
-        self.subclaims.append(claim)
+    def add_query(self, query):
+        self.subqueries.append(query)
 
-    def get_claims(self):
-        return [self.base_claim] + self.subclaims
+    def get_all(self):
+        return [self.base_claim] + self.subqueries
     
     def get_base_claim(self):
         return self.base_claim
     
-    def get_subclaims(self):
-        return self.subclaims
+    def get_subqueries(self):
+        return self.subqueries
 
 class Evidence:
-    def __init__(self, claim, evidence_text, score=0, doc_id=None, wiki_url=None, evidence_sentence=None):
-        self.claim = claim
+    def __init__(self, query, evidence_text, score=0, doc_id=None, wiki_url=None, evidence_sentence=None):
+        self.query = query
         self.doc_id = doc_id
         self.score = score
         self.evidence_text = evidence_text
@@ -40,8 +48,8 @@ class Evidence:
         self.wiki_url = "https://en.wikipedia.org/wiki/" + str(cursor.fetchone()[0])
 
 class EvidenceWrapper:
-    def __init__(self, claim):
-        self.claim = claim
+    def __init__(self, query):
+        self.query = query
         self.evidences = []
 
     def add_evidence(self, evidence):

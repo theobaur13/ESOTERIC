@@ -1,8 +1,8 @@
 import spacy
-from models import Claim, ClaimWrapper
+from models import Query, QueryWrapper
 from transformers import pipeline
 
-class ClaimGenerator:
+class QueryGenerator:
     def __init__(self, claim=""):
         self.text = claim
         self.nlp = spacy.load('en_core_web_sm')
@@ -11,18 +11,18 @@ class ClaimGenerator:
     def set_claim(self, claim):
         self.text = claim
 
-    def generate_claims(self):
+    def generate_queries(self):
         focal_points = self.extract_focals()
         questions = self.generate_questions(focal_points)
 
-        base_claim = Claim(self.text)
-        claim_wrapper = ClaimWrapper(base_claim)
+        base_claim = Query(self.text)
+        query_wrapper = QueryWrapper(base_claim)
 
         for question in questions:
-            claim = Claim(question)
-            claim_wrapper.add_claim(claim)
+            query = Query(question)
+            query_wrapper.add_query(query)
 
-        return claim_wrapper
+        return query_wrapper
 
     def extract_focals(self):
         print("Extracting focal points from claim")

@@ -15,22 +15,22 @@ class EvidenceRetriever:
         self.answerability_pipe = pipeline("text-classification", model="potsawee/longformer-large-4096-answerable-squad2")
         claucy.add_to_pipe(self.triple_extraction_model)
 
-    def retrieve_evidence(self, claim):
-        evidence = self.retrieve_documents(claim)
+    def retrieve_evidence(self, query):
+        evidence = self.retrieve_documents(query)
         evidence = self.retrieve_passages(evidence)
         return evidence
 
-    def retrieve_documents(self, claim):
-        print("Starting document retrieval for claim: '" + str(claim.text) + "'")
-        evidence_wrapper = EvidenceWrapper(claim)
-        # triples = triple_extraction(claim.text, self.triple_extraction_model)
-        e_l_dict = FAISS_search(claim.text, self.data_path)
+    def retrieve_documents(self, query):
+        print("Starting document retrieval for query: '" + str(query.text) + "'")
+        evidence_wrapper = EvidenceWrapper(query)
+        # triples = triple_extraction(query.text, self.triple_extraction_model)
+        results_dict = FAISS_search(query.text, self.data_path)
 
         cursor = self.connection.cursor()
-        for doc_id, score in e_l_dict.items():
+        for doc_id, score in results_dict.items():
             cursor.execute("SELECT text FROM documents WHERE id = ?", (doc_id,))
             text = cursor.fetchone()[0]
-            evidence = Evidence(claim, text, score, doc_id)
+            evidence = Evidence(query, text, score, doc_id)
             evidence_wrapper.add_evidence(evidence)
 
         return evidence_wrapper

@@ -3,13 +3,13 @@ import os
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parents[1] / 'src'))
-from claim_generation.claim_generation import ClaimGenerator
+from claim_generation.query_generation import QueryGenerator
 from evidence_retrieval.evidence_retrieval import EvidenceRetriever
-from models import Claim, ClaimWrapper, Evidence, EvidenceWrapper
+from models import Query, QueryWrapper, Evidence, EvidenceWrapper
 
 @pytest.fixture
-def claim_generator():
-    return ClaimGenerator()
+def query_generator():
+    return QueryGenerator()
 
 @pytest.fixture
 def evidence_retriever():
@@ -18,5 +18,5 @@ def evidence_retriever():
     return EvidenceRetriever(data_path)
 
 @pytest.fixture
-def claim():
-    return Claim()
+def query():
+    return Query()
