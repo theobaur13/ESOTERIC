@@ -1,8 +1,5 @@
 import os
 import sqlite3
-import spacy
-import claucy
-from transformers import pipeline
 from models import Evidence, EvidenceWrapper
 from evidence_retrieval.tools.document_retrieval import FAISS_search
 from evidence_retrieval.tools.passage_retrieval import answerability_filter, passage_extraction

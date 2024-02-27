@@ -1,4 +1,5 @@
 import spacy
+import claucy
 from models import Query, QueryWrapper
 from transformers import pipeline
 from query_generation.tools.varifocal import extract_focals, generate_questions, reranking
@@ -11,6 +12,7 @@ class QueryGenerator:
 
         # Load NLP models
         self.nlp = spacy.load('en_core_web_sm')
+        claucy.add_to_pipe(self.nlp)
         
         # Load model for question generation
         self.question_pipe = pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-question-generation-ap")
