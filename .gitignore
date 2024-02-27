@@ -6,3 +6,4 @@ wiki-pages.db-journal
 faiss_index
 test.py
 .pytest_cache/
+claims/
