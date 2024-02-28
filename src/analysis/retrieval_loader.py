@@ -8,7 +8,7 @@ def retrieval_loader():
     dataset_path = os.path.join(current_dir, '..', '..', 'data', 'claims')
     database_path = os.path.join(current_dir, '..', '..', 'data')
 
-    conn = sqlite3.connect(os.path.join(database_path, 'wiki-pages.db'))
+    conn = sqlite3.connect(os.path.join(database_path, 'data.db'))
     cursor = conn.cursor()
 
     cursor.execute("DROP TABLE IF EXISTS test_retrieval")

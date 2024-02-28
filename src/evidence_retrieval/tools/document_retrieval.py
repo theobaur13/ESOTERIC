@@ -2,6 +2,22 @@ import faiss
 import sentence_transformers
 import os
 
+def match_search(query, conn):
+    print("Searching for documents containing keyword '" + str(query) + "'")
+
+    query = query.replace(' ', '_')
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, doc_id FROM documents WHERE doc_id LIKE ?", ('%' + query + '%',))
+    rows = cursor.fetchall()
+
+    docs = []
+    for row in rows:
+        id = row[0]
+        doc_id = row[1]
+        docs.append({"id" : id, "doc_id" : doc_id})
+    return docs
+
 def FAISS_search(query, data_path):
     print("Searching for documents close to query '" + str(query) + "' using FAISS")
     model = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L3-v2")

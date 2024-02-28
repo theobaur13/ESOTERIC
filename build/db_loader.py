@@ -11,7 +11,7 @@ def main(batch_limit=None):
     dataset_path = os.path.join(current_dir, '..', 'data', 'wiki-pages')
     database_path = os.path.join(current_dir, '..', 'data')
 
-    conn = sqlite3.connect(os.path.join(database_path, 'wiki-pages.db'))
+    conn = sqlite3.connect(os.path.join(database_path, 'data.db'))
     cursor = conn.cursor()
 
     clear = input("Do you want to clear the database? (y/n): ")
@@ -29,7 +29,6 @@ def main(batch_limit=None):
         ''')
 
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_id ON documents(id);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_doc_id ON documents(doc_id);")
 
     doc_ids = []
     documents = []
