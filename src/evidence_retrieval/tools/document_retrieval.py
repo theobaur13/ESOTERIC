@@ -2,11 +2,11 @@ import faiss
 import sentence_transformers
 import os
 
-def FAISS_search(claim, data_path):
-    print("Searching for documents close to triple '" + str(claim) + "' using FAISS")
+def FAISS_search(query, data_path):
+    print("Searching for documents close to query '" + str(query) + "' using FAISS")
     model = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L3-v2")
-    query_vector = model.encode([claim])
-    k = 5
+    query_vector = model.encode([query])
+    k = 10
     index = faiss.read_index(os.path.join(data_path, 'faiss_index'))
 
     top_k = index.search(query_vector, k)

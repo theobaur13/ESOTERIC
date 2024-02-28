@@ -13,7 +13,7 @@ from analysis.retrieval_analysis import skeleton
 from analysis.retrieval_plotter import relationship_plotter
 
 if __name__ == "__main__":
-    load_or_analyze = input("Would you like to load the data or analyze it? (l/a/p)\n(l) Load, (a) Analyze, (p) Plot\n")
+    load_or_analyze = input("Would you like to load the data or analyze it?\n(l) Load, (a) Analyze, (p) Plot\n")
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         retrieval_loader()
     elif load_or_analyze == "a":
         database_path = os.path.join(current_dir, '..', 'data')
-        method = input("Which method would you like to analyze? (VF/NER/TE/NC)\n(VF) Varifocal, (NER) Named Entity Recognition, (TE) Triple Extraction, (NC) Naked Claim\n")
+        method = input("Which method would you like to analyze? (VF/NER/TE/NC/C)\n(VF) Varifocal, (NER) Named Entity Recognition, (TE) Triple Extraction, (NC) Naked Claim, (C) Combined\n")
         output_dir = os.path.join(current_dir, '..', 'data', 'analysis')
 
         skeleton(database_path, method, output_dir)
