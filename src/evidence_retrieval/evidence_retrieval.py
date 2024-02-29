@@ -49,9 +49,6 @@ class EvidenceRetriever:
             if doc not in docs:
                 docs.append(doc)
 
-        for doc in docs:
-            print(doc)
-
         cursor = self.connection.cursor()
         for id, doc_id, score in [(doc['id'], doc['doc_id'], doc['score']) for doc in docs]:
             cursor.execute("SELECT text FROM documents WHERE id = ?", (id,))

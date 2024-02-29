@@ -33,6 +33,8 @@ def skeleton(database_path, output_dir):
         doc_id = row[0]
         claim = row[1]
 
+        print("\nTarget document:", doc_id)
+
         hit_status = False
 
         evidence_wrapper = evidence_retriever.retrieve_documents(claim)
