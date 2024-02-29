@@ -3,7 +3,6 @@ import sqlite3
 import json
 import time
 import argparse
-from sklearn.feature_extraction.text import TfidfVectorizer
 from tqdm import tqdm
 
 def main(batch_limit=None):

@@ -18,7 +18,8 @@ def retrieval_loader():
         CREATE TABLE IF NOT EXISTS test_retrieval(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         doc_id TEXT NOT NULL,
-        claim TEXT NOT NULL);
+        claim TEXT NOT NULL,
+        UNIQUE(doc_id, claim));
         ''')
 
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_test_retrieval_doc_id ON test_retrieval(doc_id);")
@@ -36,6 +37,10 @@ def retrieval_loader():
                     if data["label"] == "SUPPORTS" or data["label"] == "REFUTES":
                         for evidence_set in data["evidence"]:
                             for evidence in evidence_set:
-                                cursor.execute("INSERT INTO test_retrieval (doc_id, claim) VALUES (?, ?)", (evidence[2], data["claim"]))
+                                # cursor.execute("INSERT INTO test_retrieval (doc_id, claim) VALUES (?, ?)", (evidence[2], data["claim"]))
+                                try:
+                                    cursor.execute("INSERT INTO test_retrieval (doc_id, claim) VALUES (?, ?)", (evidence[2], data["claim"]))
+                                except sqlite3.IntegrityError:
+                                    pass
     
     conn.commit()
