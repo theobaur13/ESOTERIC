@@ -23,7 +23,7 @@ def main():
 
     print("\n\033[1mBase claim: {}\033[0m".format(evidence_collection.get_claim()))
     for evidence in evidence_collection.get_evidences():
-        # evidence.set_wiki_url(conn)
+        evidence.set_wiki_url(conn)
         print("\nEvidence Sentence:", evidence.evidence_sentence)
         print("Evidence Document:", evidence.evidence_text)
         print("Score:", str(evidence.score))
