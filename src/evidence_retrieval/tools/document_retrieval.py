@@ -1,6 +1,7 @@
 import faiss
 import sentence_transformers
 import os
+import re
 
 def match_search(query, conn):
     print("Searching for documents containing keyword '" + str(query) + "'")
@@ -22,8 +23,35 @@ def match_search(query, conn):
         docs.append({"id" : id, "doc_id" : doc_id})
     return docs
 
-def rough_similarity_filtering(query, docs, model):
-    print("Rough similarity filtering for query '" + str(query) + "'")
+def score_docs(docs, query, nlp):
+    print("Scoring documents")
+
+    disambiguated_docs = []
+
+    for doc in docs:
+        doc_id = doc['doc_id']
+        pattern = r'\-LRB\-.+\-RRB\-'
+
+        if re.search(pattern, doc_id):
+                disambiguated_docs.append(doc)
+                docs = [d for d in docs if d['doc_id'] != doc_id]
+
+    for doc in disambiguated_docs:
+        doc_id = doc['doc_id']
+    
+        pattern = r'\-LRB\-(.+)\-RRB\-'
+        info = re.search(pattern, doc_id).group(1)
+
+        nlp_info = nlp(info)
+        nlp_query = nlp(query)
+        score = nlp_info.similarity(nlp_query)
+        doc['score'] = score
+
+    for doc in docs:
+        doc['score'] = 1
+
+    docs = docs + disambiguated_docs
+    return docs
 
 def FAISS_search(query, data_path):
     print("Searching for documents close to query '" + str(query) + "' using FAISS")

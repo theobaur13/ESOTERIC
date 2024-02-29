@@ -3,8 +3,7 @@ import sqlite3
 import re
 import spacy
 from models import Evidence, EvidenceWrapper
-from evidence_retrieval.tools.document_retrieval import match_search, FAISS_search
-from evidence_retrieval.tools.passage_retrieval import answerability_filter, passage_extraction
+from evidence_retrieval.tools.document_retrieval import match_search, score_docs
 from evidence_retrieval.tools.NER import extract_entities
 from transformers import pipeline
 
@@ -34,31 +33,8 @@ class EvidenceRetriever:
                 if doc not in docs:
                     docs.append(doc)
 
-        disambiguated_docs = []
-
-        for doc in docs:
-            doc_id = doc['doc_id']
-            pattern = r'\-LRB\-.+\-RRB\-'
-
-            if re.search(pattern, doc_id):
-                disambiguated_docs.append(doc)
-                docs = [d for d in docs if d['doc_id'] != doc_id]
-
-        for doc in disambiguated_docs:
-            doc_id = doc['doc_id']
-    
-            pattern = r'\-LRB\-(.+)\-RRB\-'
-            info = re.search(pattern, doc_id).group(1)
-
-            nlp_info = self.nlp(info)
-            nlp_query = self.nlp(query)
-            score = nlp_info.similarity(nlp_query)
-            doc['score'] = score
-
-        for doc in docs:
-            doc['score'] = 1
-
-        docs = docs + disambiguated_docs
+        docs = score_docs(docs, query, self.nlp)
+        
         docs = sorted(docs, key=lambda x: x['score'], reverse=True)[:30]
 
         cursor = self.connection.cursor()
