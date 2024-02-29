@@ -14,16 +14,16 @@ import sqlite3
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     data_path = os.path.join(current_dir, '..', 'data')
+    conn = sqlite3.connect(os.path.join(data_path, 'data.db'))
 
     input_claim = input("Enter claim: ")
 
     evidence_retriever = EvidenceRetriever(data_path)
-
     evidence_collection = evidence_retriever.retrieve_evidence(input_claim)
 
     print("\n\033[1mBase claim: {}\033[0m".format(evidence_collection.get_claim()))
     for evidence in evidence_collection.get_evidences():
-        evidence.set_wiki_url(sqlite3.connect(os.path.join(data_path, 'data.db')))
+        # evidence.set_wiki_url(conn)
         print("\nEvidence Sentence:", evidence.evidence_sentence)
         print("Evidence Document:", evidence.evidence_text)
         print("Score:", str(evidence.score))

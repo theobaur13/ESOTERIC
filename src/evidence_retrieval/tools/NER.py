@@ -7,7 +7,7 @@ def extract_entities(nlp, text):
         entity_string = entity['word']
 
         if "-" in entity_string:
-            entity_string = entity_string.replace(" ", "")
+            entity_string = entity_string.replace(" - ", "-")
             
         entities.append(entity_string)
 
