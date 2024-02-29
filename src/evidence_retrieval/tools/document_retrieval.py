@@ -2,9 +2,11 @@ import faiss
 import sentence_transformers
 import os
 import re
+import faiss
+from pandas import DataFrame as df
 
-def match_search(query, conn):
-    print("Searching for documents containing keyword '" + str(query) + "'")
+def title_match_search(query, conn):
+    print("Searching for titles containing keyword '" + str(query) + "'")
 
     formatted_query = query.replace(' ', '_').lower()
 
@@ -22,6 +24,45 @@ def match_search(query, conn):
         doc_id = row[1]
         docs.append({"id" : id, "doc_id" : doc_id})
     return docs
+
+def text_match_search(claim, query, conn, encoder):
+    print("Searching for documents containing keyword '" + str(query) + "'")
+
+    formatted_query = query.lower()
+
+    cursor = conn.cursor()
+    cursor.execute("""
+                SELECT id, doc_id, text FROM documents WHERE LOWER(text) LIKE ? LIMIT 100
+                """, ("%" + formatted_query + "%",))
+    rows = cursor.fetchall()
+
+    if len(rows) == 0:
+        return []
+
+    data = df(rows, columns=['id', 'doc_id', 'text'])
+    text = data['text'].tolist()
+    
+    doc_count = len(text)
+
+    text_vectors = encoder.encode(text)
+    claim_vector = encoder.encode([claim])
+
+    index = faiss.IndexFlatIP(text_vectors.shape[1])
+    index.add(text_vectors)
+
+    k = min(10, doc_count)
+    top_k = index.search(claim_vector, k)
+
+    docs = []
+    for i in range(k):
+        doc_id = data['doc_id'][top_k[1][0][i]]
+        score = top_k[0][0][i]
+        id = int(data['id'][top_k[1][0][i]])
+        docs.append({"id" : id, "doc_id" : doc_id, "score" : score})
+
+    docs = sorted(docs, key=lambda x: x['score'], reverse=True)
+    return docs
+    
 
 def score_docs(docs, query, nlp):
     print("Scoring documents")
@@ -52,16 +93,3 @@ def score_docs(docs, query, nlp):
 
     docs = docs + disambiguated_docs
     return docs
-
-def FAISS_search(query, data_path):
-    print("Searching for documents close to query '" + str(query) + "' using FAISS")
-    model = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L3-v2")
-    query_vector = model.encode([query])
-    k = 10
-    index = faiss.read_index(os.path.join(data_path, 'faiss_index'))
-
-    top_k = index.search(query_vector, k)
-    ids = [int(i) for i in top_k[1][0]]
-    search_results = dict(zip(ids, top_k[0][0]))
-    
-    return search_results

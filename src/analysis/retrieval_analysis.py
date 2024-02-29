@@ -11,12 +11,6 @@ def initialiser(database_path):
     conn = sqlite3.connect(os.path.join(database_path, 'data.db'))
     cursor = conn.cursor()
 
-    # cursor.execute('''
-    #     SELECT documents.id, test_retrieval.claim
-    #     FROM test_retrieval
-    #     JOIN documents ON test_retrieval.doc_id = documents.doc_id
-    # ''')
-
     cursor.execute('''
         SELECT documents.doc_id, test_retrieval.claim
         FROM test_retrieval
