@@ -30,7 +30,6 @@ class EvidenceRetriever:
         docs = []
         for entity in entities:
             match_docs = match_search(entity, self.connection)
-            # add match_docs to docs if not already in docs
             for doc in match_docs:
                 if doc not in docs:
                     docs.append(doc)
@@ -43,7 +42,7 @@ class EvidenceRetriever:
 
             if re.search(pattern, doc_id):
                 disambiguated_docs.append(doc)
-                docs.pop(docs.index(doc))
+                docs = [d for d in docs if d['doc_id'] != doc_id]
 
         for doc in disambiguated_docs:
             doc_id = doc['doc_id']
@@ -60,7 +59,7 @@ class EvidenceRetriever:
             doc['score'] = 1
 
         docs = docs + disambiguated_docs
-        docs = sorted(docs, key=lambda x: x['score'], reverse=True)[:10]
+        docs = sorted(docs, key=lambda x: x['score'], reverse=True)[:30]
 
         cursor = self.connection.cursor()
         for id, doc_id, score in [(doc['id'], doc['doc_id'], doc['score']) for doc in docs]:

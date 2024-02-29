@@ -29,6 +29,7 @@ def main(batch_limit=None):
         ''')
 
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_id ON documents(id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_doc_id ON documents(doc_id);")
 
     doc_ids = []
     documents = []

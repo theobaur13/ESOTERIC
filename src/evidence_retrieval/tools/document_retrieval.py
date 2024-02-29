@@ -5,10 +5,14 @@ import os
 def match_search(query, conn):
     print("Searching for documents containing keyword '" + str(query) + "'")
 
-    query = query.replace(' ', '_')
+    formatted_query = query.replace(' ', '_').lower()
 
     cursor = conn.cursor()
-    cursor.execute("SELECT id, doc_id FROM documents WHERE doc_id LIKE ?", ('%' + query + '%',))
+    cursor.execute("""
+                   SELECT id, doc_id FROM documents WHERE LOWER(doc_id) = ?
+                   UNION
+                   SELECT id, doc_id FROM documents WHERE LOWER(doc_id) LIKE ?
+                   """, (formatted_query, formatted_query + '_-LRB-%-RRB-%',))
     rows = cursor.fetchall()
 
     docs = []
@@ -17,6 +21,9 @@ def match_search(query, conn):
         doc_id = row[1]
         docs.append({"id" : id, "doc_id" : doc_id})
     return docs
+
+def rough_similarity_filtering(query, docs, model):
+    print("Rough similarity filtering for query '" + str(query) + "'")
 
 def FAISS_search(query, data_path):
     print("Searching for documents close to query '" + str(query) + "' using FAISS")
