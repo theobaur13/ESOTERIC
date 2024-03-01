@@ -5,30 +5,41 @@ from tqdm import tqdm
 from evidence_retrieval.evidence_retrieval import EvidenceRetriever
 from transformers import pipeline
 
-def initialiser(database_path):
+def initialiser(database_path, preloaded_claim=None):
     # Set up the database connection
     conn = sqlite3.connect(os.path.join(database_path, 'data.db'))
     cursor = conn.cursor()
 
-    # Create test retrieval table [id][doc_id][claim]
-    cursor.execute('''
-        SELECT documents.doc_id, test_retrieval.claim
-        FROM test_retrieval
-        JOIN documents ON test_retrieval.doc_id = documents.doc_id
-        ORDER BY RANDOM()
-    ''')
+    # Select claims to test from db
+    if preloaded_claim:
+        cursor.execute('''
+            SELECT documents.doc_id, test_retrieval.claim
+            FROM test_retrieval
+            JOIN documents ON test_retrieval.doc_id = documents.doc_id
+            WHERE test_retrieval.id = ?
+        ''', (preloaded_claim,))
+    else:
+        cursor.execute('''
+            SELECT documents.doc_id, test_retrieval.claim
+            FROM test_retrieval
+            JOIN documents ON test_retrieval.doc_id = documents.doc_id
+            ORDER BY RANDOM()
+        ''')
 
     # Initialise evidence retriever
     evidence_retriever = EvidenceRetriever(database_path)
 
     return cursor, evidence_retriever
 
-def skeleton(database_path, output_dir):
+def skeleton(database_path, output_dir, preloaded_claim=None):
     # Set output path for results
     output_path = os.path.join(output_dir, "results.jsonl")
 
     # Set up the database connection and evidence retriever
-    cursor, evidence_retriever = initialiser(database_path)
+    if preloaded_claim:
+        cursor, evidence_retriever = initialiser(database_path, preloaded_claim)
+    else:
+        cursor, evidence_retriever = initialiser(database_path)
     
     # Initialise hit and miss counters for hitrate calculation
     hits = 0

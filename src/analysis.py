@@ -21,6 +21,13 @@ if __name__ == "__main__":
     elif load_or_analyze == "a":
         database_path = os.path.join(current_dir, '..', 'data')
         output_dir = os.path.join(current_dir, '..', 'data', 'analysis')
-        skeleton(database_path, output_dir)
+
+        preloaded_claim = input("Enter a claim ID to analyze, or 'all' to analyze all claims:\n")
+        # if preloaded claim is int
+        if preloaded_claim.isdigit():
+            preloaded_claim = int(preloaded_claim)
+            skeleton(database_path, output_dir, preloaded_claim)
+        else:
+            skeleton(database_path, output_dir)
     else:
         print("Invalid input. Please enter 'l' or 'a'.")

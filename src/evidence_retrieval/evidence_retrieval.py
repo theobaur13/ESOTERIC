@@ -61,12 +61,12 @@ class EvidenceRetriever:
 
         # Retrieve the text of 30 documents from db
         cursor = self.connection.cursor()
-        for id, doc_id, score, method in [(doc['id'], doc['doc_id'], doc['score'], doc['method']) for doc in docs]:
+        for id, doc_id, score, method, entity in [(doc['id'], doc['doc_id'], doc['score'], doc['method'], doc['entity']) for doc in docs]:
             cursor.execute("SELECT text FROM documents WHERE id = ?", (id,))
             text = cursor.fetchone()[0]
             evidence = Evidence(query, text, score, doc_id, doc_retrieval_method=method, entity=entity)
             evidence_wrapper.add_evidence(evidence)
-
+        
         return evidence_wrapper
 
     def retrieve_passages(self, evidence_wrapper):

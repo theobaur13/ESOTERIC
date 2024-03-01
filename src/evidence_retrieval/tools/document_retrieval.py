@@ -26,7 +26,7 @@ def title_match_search(query, conn):
     for row in rows:
         id = row[0]
         doc_id = row[1]
-        docs.append({"id" : id, "doc_id" : doc_id})
+        docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
     return docs
 
 def text_match_search(claim, query, conn, encoder):
@@ -68,7 +68,7 @@ def text_match_search(claim, query, conn, encoder):
         doc_id = data['doc_id'][top_k[1][0][i]]
         score = top_k[0][0][i]
         id = int(data['id'][top_k[1][0][i]])
-        docs.append({"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match"})
+        docs.append({"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match", "entity" : query})
 
     # Return sorted list of documents by score
     docs = sorted(docs, key=lambda x: x['score'], reverse=True)
