@@ -40,6 +40,7 @@ def text_match_scoring(database_path, output_dir, preloaded_claim=None):
     k = 1000
 
     for row in tqdm(cursor.fetchall()):
+        print("Scoring claim:", row[1])
         target_doc = row[0]
         claim = row[1]
 
@@ -71,13 +72,15 @@ def text_match_scoring(database_path, output_dir, preloaded_claim=None):
                     "hit_status": hit_status
                 })
 
-    # Write results to file
-    with open(output_path, 'r') as file:
-        data = json.load(file)
+        # Write results to file
+        if not os.path.exists(output_path):
+            with open(output_path, 'w') as file:
+                json.dump([], file) 
 
-    data.append(result)
-    
-    with open(output_path, 'w') as file:
-        json.dump(data, file, indent=4)
+        with open(output_path, 'r') as file:
+            data = json.load(file)
 
-
+        data.append(result)
+        
+        with open(output_path, 'w') as file:
+            json.dump(data, file, indent=4)

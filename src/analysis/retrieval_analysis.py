@@ -33,7 +33,7 @@ def initialiser(database_path, preloaded_claim=None):
 
 def skeleton(database_path, output_dir, preloaded_claim=None):
     # Set output path for results
-    output_path = os.path.join(output_dir, "results.json")
+    output_path = os.path.join(output_dir, "retrieval_results.json")
 
     # Set up the database connection and evidence retriever
     if preloaded_claim:
@@ -92,6 +92,10 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
         print("Hitrate: " + str((hits / (hits + misses)) * 100) + "%\n")
 
         #write line to file
+        if not os.path.exists(output_path):
+            with open(output_path, 'w') as file:
+                json.dump([], file) 
+
         with open(output_path, 'r') as file:
             data = json.load(file)
 
