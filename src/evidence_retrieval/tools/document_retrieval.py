@@ -29,7 +29,7 @@ def title_match_search(query, conn):
         docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
     return docs
 
-def text_match_search(claim, query, conn, encoder):
+def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
     print("Searching for documents containing keyword '" + str(query) + "'")
 
     # Convert query to lowercase
@@ -38,8 +38,8 @@ def text_match_search(claim, query, conn, encoder):
     # Retrieve documents from db containing query
     cursor = conn.cursor()
     cursor.execute("""
-                SELECT id, doc_id, text FROM documents WHERE LOWER(text) LIKE ? LIMIT 100
-                """, ("%" + formatted_query + "%",))
+                SELECT id, doc_id, text FROM documents WHERE LOWER(text) LIKE ? LIMIT ?
+                """, ("%" + formatted_query + "%", limit))
     rows = cursor.fetchall()
     if len(rows) == 0:
         return []
@@ -59,7 +59,7 @@ def text_match_search(claim, query, conn, encoder):
     index.add(text_vectors)
 
     # Search for top 10 documents with highest similarity to claim
-    k = min(10, doc_count)
+    k = min(k_lim, doc_count)
     top_k = index.search(claim_vector, k)
 
     # Return dictionary of {"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match"}

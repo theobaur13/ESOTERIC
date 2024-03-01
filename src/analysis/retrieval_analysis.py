@@ -3,7 +3,7 @@ import sqlite3
 import json
 from tqdm import tqdm
 from evidence_retrieval.evidence_retrieval import EvidenceRetriever
-from transformers import pipeline
+import json
 
 def initialiser(database_path, preloaded_claim=None):
     # Set up the database connection
@@ -33,7 +33,7 @@ def initialiser(database_path, preloaded_claim=None):
 
 def skeleton(database_path, output_dir, preloaded_claim=None):
     # Set output path for results
-    output_path = os.path.join(output_dir, "results.jsonl")
+    output_path = os.path.join(output_dir, "results.json")
 
     # Set up the database connection and evidence retriever
     if preloaded_claim:
@@ -92,5 +92,10 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
         print("Hitrate: " + str((hits / (hits + misses)) * 100) + "%\n")
 
         #write line to file
-        with open(output_path, 'a') as f:
-            f.write(json.dumps(result) + "\n")
+        with open(output_path, 'r') as file:
+            data = json.load(file)
+
+        data.append(result)
+    
+        with open(output_path, 'w') as file:
+            json.dump(data, file, indent=4)
