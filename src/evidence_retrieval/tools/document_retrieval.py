@@ -58,7 +58,7 @@ def text_match_search(claim, query, conn, encoder):
         doc_id = data['doc_id'][top_k[1][0][i]]
         score = top_k[0][0][i]
         id = int(data['id'][top_k[1][0][i]])
-        docs.append({"id" : id, "doc_id" : doc_id, "score" : score})
+        docs.append({"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match"})
 
     docs = sorted(docs, key=lambda x: x['score'], reverse=True)
     return docs
@@ -87,9 +87,11 @@ def score_docs(docs, query, nlp):
         nlp_query = nlp(query)
         score = nlp_info.similarity(nlp_query)
         doc['score'] = score
+        doc['method'] = "disambiguation"
 
     for doc in docs:
         doc['score'] = 1
+        doc['method'] = "title_match"
 
     docs = docs + disambiguated_docs
     return docs

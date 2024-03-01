@@ -50,10 +50,10 @@ class EvidenceRetriever:
                 docs.append(doc)
 
         cursor = self.connection.cursor()
-        for id, doc_id, score in [(doc['id'], doc['doc_id'], doc['score']) for doc in docs]:
+        for id, doc_id, score, method in [(doc['id'], doc['doc_id'], doc['score'], doc['method']) for doc in docs]:
             cursor.execute("SELECT text FROM documents WHERE id = ?", (id,))
             text = cursor.fetchone()[0]
-            evidence = Evidence(query, text, score, doc_id)
+            evidence = Evidence(query, text, score, doc_id, doc_retrieval_method=method)
             evidence_wrapper.add_evidence(evidence)
 
         return evidence_wrapper

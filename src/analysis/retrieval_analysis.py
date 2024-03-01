@@ -23,41 +23,41 @@ def initialiser(database_path):
     return cursor, evidence_retriever
 
 def skeleton(database_path, output_dir):
+    output_path = os.path.join(output_dir, "results.jsonl")
+
     cursor, evidence_retriever = initialiser(database_path)
     
     hits = 0
     misses = 0
-    results = []
 
     for row in tqdm(cursor.fetchall()):
         doc_id = row[0]
         claim = row[1]
+        hit_status = False
+        evidence_wrapper = evidence_retriever.retrieve_documents(claim)
 
         print("\nTarget document:", doc_id)
 
-        hit_status = False
-
-        evidence_wrapper = evidence_retriever.retrieve_documents(claim)
+        result = {
+            "claim": claim,
+            "target_doc": doc_id,
+            "evidence": []
+            }
 
         for evidence in evidence_wrapper.get_evidences():
+            result["evidence"].append({
+                "doc_id": evidence.doc_id,
+                "score": str(evidence.score),
+                "method" : evidence.doc_retrieval_method,
+                "hit" : False
+            })
             if evidence.doc_id == doc_id:
                 hit_status = True
-                result = {
-                    "claim": claim,
-                    "target_doc_id": doc_id,
-                    "actual_doc_id": evidence.doc_id,
-                    "hit/miss": "hit"
-                }
+                for e in result["evidence"]:
+                    if e["doc_id"] == evidence.doc_id:
+                        e["hit"] = True
                 print("Hit on document:", doc_id)
                 break
-            else:
-                result = {
-                    "claim": claim,
-                    "target_doc_id": doc_id,
-                    "actual_doc_id": evidence.doc_id,
-                    "hit/miss": "miss"
-                }
-        results.append(result)
                 
         if hit_status:
             hits += 1
@@ -68,6 +68,6 @@ def skeleton(database_path, output_dir):
 
         print("Hitrate: " + str((hits / (hits + misses)) * 100) + "%\n")
 
-    output_path = os.path.join(output_dir, + "results.json")
-    with open(output_path, 'w') as f:
-        json.dump(results, f, indent=4)
+        #write line to file
+        with open(output_path, 'a') as f:
+            f.write(json.dumps(result) + "\n")

@@ -1,11 +1,12 @@
 class Evidence:
-    def __init__(self, query, evidence_text, score=0, doc_id=None, wiki_url=None, evidence_sentence=None):
+    def __init__(self, query, evidence_text, score=0, doc_id=None, wiki_url=None, evidence_sentence=None, doc_retrieval_method=None):
         self.query = query
         self.doc_id = doc_id
         self.score = score
         self.evidence_text = evidence_text
         self.wiki_url = wiki_url
         self.evidence_sentence = evidence_sentence
+        self.doc_retrieval_method = doc_retrieval_method
 
     def set_evidence_sentence(self, evidence_sentence):
         self.evidence_sentence = evidence_sentence
