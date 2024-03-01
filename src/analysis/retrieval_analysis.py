@@ -46,6 +46,7 @@ def skeleton(database_path, output_dir):
 
         for evidence in evidence_wrapper.get_evidences():
             result["evidence"].append({
+                "entity" : evidence.entity,
                 "doc_id": evidence.doc_id,
                 "score": str(evidence.score),
                 "method" : evidence.doc_retrieval_method,

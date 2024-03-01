@@ -53,7 +53,7 @@ class EvidenceRetriever:
         for id, doc_id, score, method in [(doc['id'], doc['doc_id'], doc['score'], doc['method']) for doc in docs]:
             cursor.execute("SELECT text FROM documents WHERE id = ?", (id,))
             text = cursor.fetchone()[0]
-            evidence = Evidence(query, text, score, doc_id, doc_retrieval_method=method)
+            evidence = Evidence(query, text, score, doc_id, doc_retrieval_method=method, entity=entity)
             evidence_wrapper.add_evidence(evidence)
 
         return evidence_wrapper
