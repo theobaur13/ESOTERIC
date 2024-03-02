@@ -26,7 +26,8 @@ def title_match_search(query, conn):
     for row in rows:
         id = row[0]
         doc_id = row[1]
-        docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
+        if doc_id not in [d['doc_id'] for d in docs]:
+            docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
     return docs
 
 def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
@@ -97,6 +98,7 @@ def score_docs(docs, query, nlp):
     
         pattern = r'\-LRB\-(.+)\-RRB\-'
         info = re.search(pattern, doc_id).group(1)
+        info = info.replace('_', ' ')
 
         nlp_info = nlp(info)
         nlp_query = nlp(query)
