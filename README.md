@@ -8,7 +8,7 @@ This application unfinished and is still in development as of 21/02/2024.
 Clone repository.
 
 ```bash
-git clone https://github.com/theobaur13/nlp-automated-fact-checker
+git clone https://github.com/theobaur13/FEVERISH
 ```
 Set up virtual environment.
 
@@ -17,7 +17,7 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 ```
-Create `data` directory inside main `nlp-automated-fact-checker` directory.
+Create `data` directory inside main `FEVERISH` directory.
 ```
 mkdir data
 ```
@@ -40,17 +40,11 @@ FEVERISH
         │   wiki-002.jsonl
         │   ...
         │   wiki-109.jsonl
-
 ```
 Run `db_loader.py`. The `batch_limit` argument specifies up to which wiki file to load up to (a `batch_limit` of 50 will load data from `wiki-001.jsonl` to `wiki-050.jsonl`). If `batch_limit` is left blank all wiki files will be loaded.
 
 ```python
 py db_loader.py --batch_limit 109
-```
-Run `FAISS_loader.py`. The `batch_size` arguements specifies how many individual documents to load from the database and encode in one block. The maximum `batch_size` is 999, which takes the quickest to load, however is the most CPU intensive. If `batch_size` is left blank it will automatically be set to 999.
-
-```python
-py FAISS_loader.py --batch_size 999
 ```
 ## Usage
 Activate virtual environment.
@@ -66,60 +60,86 @@ py main.py
 Enter a claim.
 
 ```
-Enter claim: Luton Town won the English Premier League in 1990
+Enter claim: Savages was exclusively a German film.
 ```
 Results:
 
 ```
-Base claim: luton town won the english premier league in 1990
-Extracted question: What team won the english premier league in 1990?
-Extracted question: What league did luton town win in 1990?
-Extracted question: When did luton town win the english premier league?
+Base claim: Savages was exclusively a German film.
 
-Claim: luton town won the english premier league in 1990
+Doc ID: Savages_-LRB-2012_film-RRB-
+Evidence Document: For the 2007 film , see The Savages   Savages is a 2012 American crime thriller film directed by Oliver Stone . It is based on the novel of the same name by Don Winslow . The screenplay was written by Shane Salerno , Stone , and Winslow . The film was released on July 6 , 2012 , and stars Taylor Kitsch , Blake Lively , Aaron Taylor-Johnson , Demian Bichir , Benicio del Toro , Salma Hayek , John Travolta and Emile Hirsch .
+Document Score: 0.3672808750132442
+Sentence: It is based on the novel of the same name by Don Winslow .
+Sentence Score: 0.44645547532495655
+Wiki URL: https://en.wikipedia.org/wiki/Savages_-LRB-2012_film-RRB-
 
-Evidence Sentence: None
-Evidence Document: The 1974 -- 75 season was the 89th season in the history of Luton Town Football Club . It was Luton Town 's 55th consecutive season in the Football League , and their 58th overall . It was also the team 's first season in the First Division since 1959 -- 60 , and their sixth overall . The season saw Luton narrowly relegated back to Division Two .   This article covers the period from 1 July 1974 to 30 June 1975 .
-Score: 20.390697
-Doc ID: 27505
-Wiki URL: https://en.wikipedia.org/wiki/1974–75_Luton_Town_F.C._season
+Doc ID: 1976_in_Germany
+Evidence Document: Events in the year 1976 in Germany .
+Document Score: 3.8814392
+Sentence: Events in the year 1976 in Germany .
+Sentence Score: 0.4450946417141637
+Wiki URL: https://en.wikipedia.org/wiki/1976_in_Germany
 
-Claim: What team won the english premier league in 1990?
+Doc ID: 1990_Deutsche_Tourenwagen_Meisterschaft
+Evidence Document: The 1990 Deutsche Tourenwagen Meisterschaft was the seventh season of the Deutsche Tourenwagen Meisterschaft -LRB- German Touring Car Championship -RRB- . The season had twelve rounds with two races each .
+Document Score: 4.102498
+Sentence: The season had twelve rounds with two races each .
+Sentence Score: 0.4379587061003252
+Wiki URL: https://en.wikipedia.org/wiki/1990_Deutsche_Tourenwagen_Meisterschaft
 
-Evidence Sentence: None
-Evidence Document: Statistics of Belgian League in season 1990/1991 .
-Score: 28.267803
-Doc ID: 34399
-Wiki URL: https://en.wikipedia.org/wiki/1990–91_Belgian_First_Division
-
-Evidence Sentence: None
-Evidence Document: Events from 1995 in England
-Score: 28.250763
-Doc ID: 49984
-Wiki URL: https://en.wikipedia.org/wiki/1995_in_England
-
-Claim: What league did luton town win in 1990?
-
-Evidence Sentence: None
-Evidence Document: Statistics of Belgian League in season 1990/1991 .
-Score: 27.751915
-Doc ID: 34399
-Wiki URL: https://en.wikipedia.org/wiki/1990–91_Belgian_First_Division
-
-Evidence Sentence: None
-Evidence Document: Statistics of Maltese Premier League in season 1970/1971 .
-Score: 26.235252
-Doc ID: 17795
-Wiki URL: https://en.wikipedia.org/wiki/1970–71_Maltese_Premier_League
-
-Claim: When did luton town win the english premier league?
-
-Evidence Sentence: None
-Evidence Document: The 1974 -- 75 season was the 89th season in the history of Luton Town Football Club . It was Luton Town 's 55th consecutive season in the Football League , and their 58th overall . It was also the team 's first season in the First Division since 1959 -- 60 , and their sixth overall . The season saw Luton narrowly relegated back to Division Two .   This article covers the period from 1 July 1974 to 30 June 1975 .
-Score: 26.466125
-Doc ID: 27505
-Wiki URL: https://en.wikipedia.org/wiki/1974–75_Luton_Town_F.C._season
+Doc ID: 1979_in_Germany
+Evidence Document: Events in the year 1979 in Germany .
+Document Score: 4.8555717
+Sentence: Events in the year 1979 in Germany .
+Sentence Score: 0.4374303623229342
+Wiki URL: https://en.wikipedia.org/wiki/1979_in_Germany
 ```
+## Analysis
+### Setup
+Create `claims` directory inside `data` directory.
+
+```
+mkdir \data\claims
+```
+
+Download [`shared_task_dev.jsonl`](https://fever.ai/download/fever/shared_task_dev.jsonl) and [`train.jsonl`](https://fever.ai/download/fever/train.jsonl) and copy into `claims` directory, which should appear as follows:
+
+```
+FEVERISH  
+│
+└───data
+    ├───claims
+    │   │   shared_task_dev.jsonl
+    │   │   train.jsonl
+    │
+    └───wiki-pages
+        │   wiki-001.jsonl
+        │   wiki-002.jsonl
+        │   ...
+        │   wiki-109.jsonl
+```
+
+Run `analysis.py`
+```
+py analysis.py
+```
+
+Select option *l*
+```
+Would you like to load claims into the database, run system, or analyse results?
+(l) Load, (r) Run, (a) Analyse
+l
+```
+
+### Usage
+Run `analysis.py`
+```
+py analysis.py
+```
+Select option *r* to run system against database of prelabelled FEVER claims or selection option *a* to plot results or display statistics.
+
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
