@@ -2,14 +2,6 @@ import os
 import json
 import matplotlib.pyplot as plt
 
-def load_data(output_dir, file_name):
-    # Load the data from the json file
-    output_path = os.path.join(output_dir, file_name)
-    with open(output_path, 'r') as file:
-        data = json.load(file)
-
-    return data
-
 def plot_text_match_scores(data):
     # x-axis: length of evidence set, y-axis: score
     hit_scores = []
