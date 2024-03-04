@@ -3,6 +3,7 @@ import sqlite3
 import spacy
 from models import Evidence, EvidenceWrapper
 from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search
+from evidence_retrieval.tools.passage_retrieval import passage_extraction
 from evidence_retrieval.tools.NER import extract_entities
 from transformers import pipeline
 import sentence_transformers
@@ -64,10 +65,11 @@ class EvidenceRetriever:
         for id, doc_id, score, method, entity in [(doc['id'], doc['doc_id'], doc['score'], doc['method'], doc['entity']) for doc in docs]:
             cursor.execute("SELECT text FROM documents WHERE id = ?", (id,))
             text = cursor.fetchone()[0]
-            evidence = Evidence(query, text, score, doc_id, doc_retrieval_method=method, entity=entity)
+            evidence = Evidence(query=query, evidence_text=text, doc_score=score, doc_id=doc_id, doc_retrieval_method=method, entity=entity)
             evidence_wrapper.add_evidence(evidence)
         
         return evidence_wrapper
 
     def retrieve_passages(self, evidence_wrapper):
+        evidence_wrapper = passage_extraction(evidence_wrapper, self.nlp)
         return evidence_wrapper

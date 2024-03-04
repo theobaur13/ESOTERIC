@@ -1,8 +1,9 @@
 class Evidence:
-    def __init__(self, query, evidence_text, score=0, doc_id=None, wiki_url=None, evidence_sentence=None, doc_retrieval_method=None, entity=None):
+    def __init__(self, query, evidence_text, doc_score=0, sentence_score=0, doc_id=None, wiki_url=None, evidence_sentence=None, doc_retrieval_method=None, entity=None):
         self.query = query
         self.doc_id = doc_id
-        self.score = score
+        self.doc_score = doc_score
+        self.sentence_score = sentence_score
         self.evidence_text = evidence_text
         self.evidence_sentence = evidence_sentence
         self.wiki_url = wiki_url
@@ -11,6 +12,9 @@ class Evidence:
 
     def set_evidence_sentence(self, evidence_sentence):
         self.evidence_sentence = evidence_sentence
+
+    def set_evidence_score(self, sentence_score):
+        self.sentence_score = sentence_score
 
     def set_wiki_url(self, conn):
         cursor = conn.cursor()
@@ -33,3 +37,9 @@ class EvidenceWrapper:
     
     def remove_evidence(self, evidence):
         self.evidences.remove(evidence)
+
+    def sort_by_doc_score(self):
+        self.evidences = sorted(self.evidences, key=lambda x: x.doc_score, reverse=True)
+
+    def sort_by_sentence_score(self):
+        self.evidences = sorted(self.evidences, key=lambda x: x.sentence_score, reverse=True)

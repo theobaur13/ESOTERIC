@@ -22,15 +22,17 @@ def main():
     # Retrieve evidence
     evidence_retriever = EvidenceRetriever(data_path)
     evidence_collection = evidence_retriever.retrieve_evidence(input_claim)
+    evidence_collection.sort_by_sentence_score()
 
     # Print evidence
     print("\n\033[1mBase claim: {}\033[0m".format(evidence_collection.get_claim()))
     for evidence in evidence_collection.get_evidences():
         evidence.set_wiki_url(conn)
-        print("\nEvidence Sentence:", evidence.evidence_sentence)
+        print("\nDoc ID:", evidence.doc_id)
         print("Evidence Document:", evidence.evidence_text)
-        print("Score:", str(evidence.score))
-        print("Doc ID:", evidence.doc_id)
+        print("Document Score:", str(evidence.doc_score))
+        print("Sentence:", evidence.evidence_sentence)
+        print("Sentence Score:", str(evidence.sentence_score))
         print("Wiki URL:", evidence.wiki_url)
 
 if __name__ == '__main__':
