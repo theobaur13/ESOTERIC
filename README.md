@@ -1,4 +1,5 @@
-# nlp-automated-fact-checker
+# FEVERISH
+FEVERISH - Fact Extraction and VERification with Intelligent Search Heuristics
 A command line application that uses natural language processing tools to retrieve relevant evidence sentences for a given input claim from the FEVER dataset.
 
 This application unfinished and is still in development as of 21/02/2024.
@@ -30,7 +31,7 @@ Download `wiki-pages.zip` from [FEVER](https://fever.ai/download/fever/wiki-page
 
 Extract `wiki-pages.zip` into `\data\wiki-pages` so that the `wiki-pages` directory appears as follows:
 ```
-nlp-automated-fact-checker  
+FEVERISH  
 │
 └───data
     │
