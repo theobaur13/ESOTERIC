@@ -27,6 +27,14 @@ def initialiser(database_path, preloaded_claim=None):
         ''')
 
     # Initialise evidence retriever
+    title_match_docs_limit = 1000
+    text_match_search_db_limit = 1000
+    text_match_search_k_limit = 100
+
+    title_match_search_threshold = 0
+    text_match_search_threshold = 0
+    answerability_threshold = 0.5
+    
     evidence_retriever = EvidenceRetriever(database_path)
 
     return cursor, evidence_retriever
@@ -67,7 +75,7 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
             result["evidence"].append({
                 "entity" : evidence.entity,
                 "doc_id": evidence.doc_id,
-                "score": str(evidence.score),
+                "score": str(evidence.doc_score),
                 "method" : evidence.doc_retrieval_method,
                 "hit" : False
             })
