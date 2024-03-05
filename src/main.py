@@ -22,7 +22,7 @@ def main():
     # Retrieve evidence
     evidence_retriever = EvidenceRetriever(data_path)
     evidence_collection = evidence_retriever.retrieve_evidence(input_claim)
-    evidence_collection.sort_by_sentence_score()
+    evidence_collection.sort_by_doc_score()
 
     # Print evidence
     print("\n\033[1mBase claim: {}\033[0m".format(evidence_collection.get_claim()))

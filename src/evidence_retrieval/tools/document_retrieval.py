@@ -1,8 +1,6 @@
 import faiss
-import sentence_transformers
-import os
 import re
-import faiss
+import torch
 from pandas import DataFrame as df
 
 # Retrieve documents with exact title match inc. docs with disambiguation in title
@@ -75,9 +73,6 @@ def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
     docs = sorted(docs, key=lambda x: x['score'], reverse=True)
     return docs
 
-def text_match_search_TF_IDF(claim, query, conn):
-    pass
-
 # Score title matched and disambiguated docs
 def score_docs(docs, query, nlp):
     print("Scoring documents")
@@ -114,3 +109,41 @@ def score_docs(docs, query, nlp):
     # Combine exact match and disambiguated docs
     docs = docs + disambiguated_docs
     return docs
+
+def extract_focals(nlp, text):
+    print("Extracting focal points from text")
+    doc = nlp(text)
+
+    tag_set = {
+        "all": ["PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE", "DATE", "TIME", "PERCENT", "MONEY", "QUANTITY", "ORDINAL", "CARDINAL"],
+    }
+
+    active_tag_set = tag_set["all"]
+    focals = []
+
+    for entity in doc.ents:
+        if entity.label_ in active_tag_set:
+            focals.append({'entity': entity.text, 'type': entity.label_})
+
+    return focals
+
+def extract_questions(nlp, focal_point, claim):
+    question_generation_string = "answer: " + focal_point + " context: " + claim
+    question_generation_output = nlp(question_generation_string)
+    question = question_generation_output[0]['generated_text'].replace("question: ", "")
+    return question
+
+def calculate_answerability_score_SelfCheckGPT(tokeniser, model, context, question):
+    input_string = question + " " + tokeniser.sep_token + " " + context
+    encoded_input = tokeniser(input_string, return_tensors="pt", truncation=True)
+    prob = torch.sigmoid(model(**encoded_input).logits.squeeze(-1)).item()
+    return prob
+
+def calculate_answerability_score_tiny(nlp, context, question):
+    input = {
+        'question': question,
+        'context': context
+    }
+    output = nlp(input)
+    score = output['score']
+    return score

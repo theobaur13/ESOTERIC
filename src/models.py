@@ -43,3 +43,8 @@ class EvidenceWrapper:
 
     def sort_by_sentence_score(self):
         self.evidences = sorted(self.evidences, key=lambda x: x.sentence_score, reverse=True)
+
+class Sentence:
+    def __init__(self, sentence, score):
+        self.sentence = sentence
+        self.score = score
