@@ -19,8 +19,18 @@ def main():
 
     input_claim = input("Enter claim: ")
 
+    # Specify doc limit parameters
+    title_match_docs_limit = 1000
+    text_match_search_db_limit = 1000
+    text_match_search_k_limit = 100
+
+    # Specify score threshold parameters
+    title_match_search_threshold = 0
+    text_match_search_threshold = 0
+    answerability_threshold = 0.5
+
     # Retrieve evidence
-    evidence_retriever = EvidenceRetriever(data_path)
+    evidence_retriever = EvidenceRetriever(data_path, title_match_docs_limit=title_match_docs_limit, text_match_search_db_limit=text_match_search_db_limit, text_match_search_k_limit=text_match_search_k_limit, title_match_search_threshold=title_match_search_threshold, text_match_search_threshold=text_match_search_threshold, answerability_threshold=answerability_threshold)
     evidence_collection = evidence_retriever.retrieve_evidence(input_claim)
     evidence_collection.sort_by_doc_score()
 
