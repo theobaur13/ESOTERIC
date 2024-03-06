@@ -40,7 +40,7 @@ def handle_analysis(operation, current_dir, output_dir):
     if operation == "r":
         run_analysis(current_dir, output_dir)
     elif operation == "a":
-        analyse_results(current_dir, output_dir)
+        analyse_results(current_dir)
     else:
         print("Invalid input. Please enter 'l' or 'a'.")
 

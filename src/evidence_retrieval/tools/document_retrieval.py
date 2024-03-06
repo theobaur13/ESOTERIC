@@ -123,8 +123,19 @@ def extract_focals(nlp, text):
 
     for entity in doc.ents:
         if entity.label_ in active_tag_set:
-            focals.append({'entity': entity.text, 'type': entity.label_})
+            focals.append({'focal': entity.text, 'type': entity.label_})
 
+    return focals
+
+def extract_answers(pipe, context):
+    input = "extract answers: <ha> " + context + " <ha>"
+    output = pipe(input)
+
+    focals = []
+    answers = output[0]['generated_text'].split("<sep>")
+    for answer in answers:
+        if answer != "":
+            focals.append({'focal': answer, 'type': "ANSWER"})
     return focals
 
 def extract_questions(nlp, focal_point, claim):

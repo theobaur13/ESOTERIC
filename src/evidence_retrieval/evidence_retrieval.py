@@ -5,7 +5,7 @@ import sentence_transformers
 from tqdm import tqdm
 from transformers import pipeline, LongformerTokenizer, LongformerForSequenceClassification
 from models import Evidence, EvidenceWrapper
-from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_focals, extract_questions, calculate_answerability_score_SelfCheckGPT, calculate_answerability_score_tiny
+from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_focals, extract_questions, calculate_answerability_score_SelfCheckGPT, calculate_answerability_score_tiny, extract_answers
 from evidence_retrieval.tools.NER import extract_entities
 
 class EvidenceRetriever:
@@ -28,13 +28,10 @@ class EvidenceRetriever:
         self.NER_pipe = pipeline("token-classification", model="Babelscape/wikineural-multilingual-ner", grouped_entities=True)
         self.FAISS_encoder = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L3-v2")
         self.question_generation_pipe = pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-question-generation-ap", max_length=256)
-        
+        self.answer_extraction_pipe = pipeline("text2text-generation", model="vabatista/t5-small-answer-extraction-en")
+
         # Setup for faster ranking method
         self.answerability_pipe = pipeline("question-answering", model="deepset/tinyroberta-squad2")
-
-        # # Setup for slower ranking method
-        # self.answerability_tokeniser = LongformerTokenizer.from_pretrained("potsawee/longformer-large-4096-answerable-squad2")
-        # self.answerability_model = LongformerForSequenceClassification.from_pretrained("potsawee/longformer-large-4096-answerable-squad2")
 
     def retrieve_evidence(self, query):
         # Retrieve evidence for a given query
@@ -61,9 +58,9 @@ class EvidenceRetriever:
         # score = cosine_similarity(info, query) for disambiguated docs
         docs = score_docs(docs, query, self.nlp)
 
-        # Retrieve 100 documents where entity is mentioned in the text
+        # Retrieve X documents where entity is mentioned in the text
         # Rerank according to FAISS inner product between query and text
-        # Return sorted top 10 documents
+        # Return sorted top Y documents
         textually_matched_docs = []
         for entity in entities:
             match_docs = text_match_search(query, entity, self.connection, self.FAISS_encoder, limit=self.text_match_search_db_limit, k_lim=self.text_match_search_k_limit)
@@ -86,14 +83,19 @@ class EvidenceRetriever:
                 docs.append(doc)
 
         # Generate questions for each focal point in the query
-        claim_focals = extract_focals(self.nlp, query)
+        claim_focals = extract_answers(self.answer_extraction_pipe, query)
         print("Claim focals:", claim_focals)
 
         questions = []
         for focal in claim_focals:
-            question = extract_questions(self.question_generation_pipe, focal['entity'], query)
+            question = extract_questions(self.question_generation_pipe, focal['focal'], query)
             questions.append(question)
-            print("Question for focal point '" + focal['entity'] + "':", question)
+            print("Question for focal point '" + focal['focal'] + "':", question)
+
+        # Manually add polar questions for each focal point
+        polar_question = extract_questions(self.question_generation_pipe, "No", query)
+        questions.append(polar_question)
+        print("Polar question:", polar_question)
 
         # Rescore documents by answerability
         for doc in tqdm(docs):
@@ -110,6 +112,9 @@ class EvidenceRetriever:
                     doc_score = answerability_score
 
             doc['score'] = doc_score
+
+        for doc in docs:
+            print(doc)
 
         # Apply threshold to answerability scores
         docs = [doc for doc in docs if doc['score'] > self.answerability_threshold]
