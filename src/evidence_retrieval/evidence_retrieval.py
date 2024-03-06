@@ -36,7 +36,7 @@ class EvidenceRetriever:
     def retrieve_evidence(self, query):
         # Retrieve evidence for a given query
         evidence = self.retrieve_documents(query)
-        # evidence = self.retrieve_passages(evidence)
+        evidence = self.retrieve_passages(evidence)
         return evidence
 
     def retrieve_documents(self, query):
@@ -106,15 +106,11 @@ class EvidenceRetriever:
 
             doc_score = 0
             for question in questions:
-                # answerability_score = calculate_answerability_score_SelfCheckGPT(self.answerability_tokeniser, self.answerability_model, text, question)
                 answerability_score = calculate_answerability_score_tiny(self.answerability_pipe, text, question)
                 if answerability_score > doc_score:
                     doc_score = answerability_score
 
             doc['score'] = doc_score
-
-        for doc in docs:
-            print(doc)
 
         # Apply threshold to answerability scores
         docs = [doc for doc in docs if doc['score'] > self.answerability_threshold]
@@ -130,74 +126,4 @@ class EvidenceRetriever:
         return evidence_wrapper
 
     def retrieve_passages(self, evidence_wrapper):
-        evidence_texts = [evidence.evidence_text for evidence in evidence_wrapper.get_evidences()]
-        base_claim = evidence_wrapper.get_claim()
-        base_claim_focals = extract_focals(self.nlp, base_claim)
-        print("Base claim focals:", base_claim_focals)
-
-        questions = []
-        for focal in base_claim_focals:
-            question = extract_questions(self.question_generation_pipe, focal['entity'], base_claim)
-            questions.append(question)
-        print("Questions:", questions)
-
-        sentence_ranking = []
-        # Extract focal points from the query
-        for doc_text in evidence_texts:
-            for sentence in self.nlp(doc_text).sents:
-                print("Processing sentence:", sentence.text)
-                # sentence_focals = extract_focals(self.nlp, sentence.text)
-                # print("Sentence focals:", sentence_focals)
-
-                sentence_score = 0
-                for question in questions:
-                    answerability_score = calculate_answerability_score_tiny(self.answerability_tokeniser, self.answerability_model, sentence.text, question)
-                    if answerability_score > sentence_score:
-                        sentence_score = answerability_score
-
-                sentence_ranking.append({'sentence': sentence.text, 'score': sentence_score})
-
-                # shared_focals = []
-                # shared_focal_types = []
-                # for focal in sentence_focals:
-                #     if focal in base_claim_focals:
-                #         shared_focals.append(focal)
-                #     elif focal['type'] in [focal['type'] for focal in base_claim_focals]:
-                #         shared_focal_types.append(focal['type'])
-                #     elif (focal['type'] == "PERSON"):
-                #         name = focal['entity']
-                #         name_parts = name.split()
-
-                #         # if two name parts are also found in a base claim focal, then add to shared_focals
-                #         for name_claim_focal in [focal['entity'] for focal in base_claim_focals if focal['type'] == "PERSON"]:
-                #             if len([part for part in name_parts if part in name_claim_focal.split()]) > 1:
-                #                 shared_focals.append(focal)
-                #                 break
-
-                # # If sentence contains more than 1 focal point equal to focals in the base claim, sentence score = 1
-                # if len(shared_focals) > 1:
-                #     sentence_score = 1
-                #     sentence_ranking.append({'sentence': sentence.text, 'score': sentence_score})
-
-                # # If sentence contains 1 focal point equal to focals in the base claim and sentence contains a focal type equal to a focal type in the base claim, sentence score = 1
-                # elif (len(shared_focals) == 1) and (len(shared_focal_types) > 0):
-                #     sentence_score = 1
-                #     sentence_ranking.append({'sentence': sentence.text, 'score': sentence_score})
-                
-                # # If sentence contains 1 focal point then calculate answerability score
-                # elif len(shared_focals) == 1:
-                #     sentence_score = 0
-                #     for question in questions:
-                #         answerability_score = calculate_answerability_score(self.answerability_tokeniser, self.answerability_model, sentence.text, question)
-                #         if answerability_score > sentence_score:
-                #             sentence_score = answerability_score
-                #     sentence_ranking.append({'sentence': sentence.text, 'score': sentence_score})
-                # # If sentence contains no focal points equal to focals in the base claim, sentence score = 0
-                # else:
-                #     sentence_score = 0
-                #     sentence_ranking.append({'sentence': sentence.text, 'score': sentence_score})
-        
-        sentence_ranking = sorted(sentence_ranking, key=lambda x: x['score'], reverse=True)
-        for line in sentence_ranking:
-            print(line)
         return evidence_wrapper
