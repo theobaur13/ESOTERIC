@@ -4,6 +4,7 @@ import json
 from tqdm import tqdm
 from evidence_retrieval.evidence_retrieval import EvidenceRetriever
 import json
+import time
 
 def initialiser(database_path, preloaded_claim=None):
     # Set up the database connection
@@ -57,6 +58,7 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
 
     # Iterate through each claim in the test retrieval table randomly
     for row in tqdm(cursor.fetchall()):
+        start = time.time()
         doc_ids = row[1].split(',')
 
         claim = row[0]
@@ -64,6 +66,9 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
 
         print("\nTarget documents:", doc_ids)
         evidence_wrapper = evidence_retriever.retrieve_documents(claim)
+
+        end = time.time()
+        print("Execution time:", end - start)
 
         # Store the results in a dictionary
         result = {

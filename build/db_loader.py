@@ -32,6 +32,9 @@ def main(batch_limit=None):
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_id ON documents(id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_doc_id ON documents(doc_id);")
 
+    # Create virtual table for full text search
+    cursor.execute("CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING FTS5(doc_id, text);")
+
     doc_ids = []
     documents = []
 
@@ -55,6 +58,7 @@ def main(batch_limit=None):
                     documents.append(data['text'])
                     doc_ids.append(data['id'])
                     cursor.execute("INSERT INTO documents (doc_id, text) VALUES (?, ?)", (data['id'], data['text']))
+                    cursor.execute("INSERT INTO documents_fts (doc_id, text) VALUES (?, ?)", (data['id'], data['text']))
         else:
             raise ValueError('Unsupported file format')
     conn.commit()

@@ -32,19 +32,27 @@ def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
     print("Searching for documents containing keyword '" + str(query) + "'")
 
     # Convert query to lowercase
-    formatted_query = query.lower()
+    formatted_query = '"' + query.lower().replace('"', '""') + '"'
 
     # Retrieve documents from db containing query
     cursor = conn.cursor()
+    # cursor.execute("""
+    #             SELECT id, doc_id, text FROM documents WHERE LOWER(text) LIKE ? LIMIT ?
+    #             """, ("%" + formatted_query + "%", limit))
     cursor.execute("""
-                SELECT id, doc_id, text FROM documents WHERE LOWER(text) LIKE ? LIMIT ?
-                """, ("%" + formatted_query + "%", limit))
+                SELECT documents.id, documents.doc_id, documents.text, bm25(documents_fts) AS rank FROM documents
+                INNER JOIN documents_fts ON documents.id = documents_fts.doc_id
+                WHERE documents_fts MATCH ? ORDER BY rank LIMIT ?
+                """, (formatted_query, limit))
     rows = cursor.fetchall()
+    adjusted_rows = [row[:3] for row in rows]
+
+    # Return empty list if no documents found
     if len(rows) == 0:
         return []
 
     # Convert rows to dataframe [id][doc_id][text]
-    data = df(rows, columns=['id', 'doc_id', 'text'])
+    data = df(adjusted_rows, columns=['id', 'doc_id', 'text'])
 
     text = data['text'].tolist()
     doc_count = len(text)
