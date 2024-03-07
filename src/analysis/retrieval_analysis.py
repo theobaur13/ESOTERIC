@@ -35,7 +35,7 @@ def initialiser(database_path, preloaded_claim=None):
 
     title_match_search_threshold = 0
     text_match_search_threshold = 0
-    answerability_threshold = 0.1
+    answerability_threshold = 0.01
     
     evidence_retriever = EvidenceRetriever(database_path, title_match_docs_limit=title_match_docs_limit, text_match_search_db_limit=text_match_search_db_limit, text_match_search_k_limit=text_match_search_k_limit, title_match_search_threshold=title_match_search_threshold, text_match_search_threshold=text_match_search_threshold, answerability_threshold=answerability_threshold)
 

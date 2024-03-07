@@ -114,9 +114,10 @@ class EvidenceRetriever:
 
             doc_score = 0
             for question in questions:
-                answerability_score = calculate_answerability_score_tiny(self.answerability_pipe, text, question)
-                if answerability_score > doc_score:
-                    doc_score = answerability_score
+                if text != "":
+                    answerability_score = calculate_answerability_score_tiny(self.answerability_pipe, text, question)
+                    if answerability_score > doc_score:
+                        doc_score = answerability_score
 
             doc['score'] = doc_score
 
