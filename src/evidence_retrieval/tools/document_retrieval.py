@@ -144,6 +144,45 @@ def extract_questions(nlp, focal_point, claim):
     question = question_generation_output[0]['generated_text'].replace("question: ", "")
     return question
 
+def extract_polar_questions(nlp, pipe, claim):
+    doc = nlp(claim)
+    questions = []
+
+    for sentence in doc.sents:
+        altered = False
+        for token in sentence:
+            if token.dep_ == "ROOT":
+                if token.pos_ == "AUX":
+                    # remove the auxiliary verb and add to the beginning of the sentence
+                    question = sentence.text.replace(token.text, "")
+                    question = token.text + " " + question
+                    altered = True
+                elif token.pos_ == "VERB":
+                    # if there is an auxiliary verb, remove it and add to the beginning of the sentence
+                    aux = [child for child in token.children if child.dep_ == "aux"]
+                    if aux:
+                        question = sentence.text.replace(aux[0].text, "")
+                        question = aux[0].text + " " + question
+                        altered = True
+        if not altered:
+            input_string = "answer: " + "No" + " context: " + claim
+            output = pipe(input_string)
+            question = output[0]['generated_text'].replace("question: ", "")
+
+        # capitalize the first letter of the question
+        question = question[0].upper() + question[1:]
+
+        # remove the period at the end of the question if it exists and add a question mark
+        if question[-1] == ".":
+            question = question[:-1] + "?"
+
+        # remove any double spaces
+        question = question.replace("  ", " ")
+        
+        questions.append(question)
+
+    return questions
+
 def calculate_answerability_score_SelfCheckGPT(tokeniser, model, context, question):
     input_string = question + " " + tokeniser.sep_token + " " + context
     encoded_input = tokeniser(input_string, return_tensors="pt", truncation=True)

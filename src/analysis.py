@@ -32,7 +32,7 @@ def main():
 
     operation = handle_input()
     if operation == "l":
-        retrieval_loader(current_dir)
+        retrieval_loader()
     else:
         handle_analysis(operation, current_dir, output_dir)
 

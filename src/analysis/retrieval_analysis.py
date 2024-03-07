@@ -13,16 +13,18 @@ def initialiser(database_path, preloaded_claim=None):
     # Select claims to test from db
     if preloaded_claim:
         cursor.execute('''
-            SELECT documents.doc_id, test_retrieval.claim
-            FROM test_retrieval
-            JOIN documents ON test_retrieval.doc_id = documents.doc_id
-            WHERE test_retrieval.id = ?
+            SELECT c.claim, GROUP_CONCAT(cd.doc_id) AS doc_ids
+            FROM claims c
+            JOIN claim_docs cd ON c.claim_id = cd.claim_id
+            WHERE c.claim_id = ?
+            GROUP BY c.claim_id
         ''', (preloaded_claim,))
     else:
         cursor.execute('''
-            SELECT documents.doc_id, test_retrieval.claim
-            FROM test_retrieval
-            JOIN documents ON test_retrieval.doc_id = documents.doc_id
+            SELECT c.claim, GROUP_CONCAT(cd.doc_id) AS doc_ids
+            FROM claims c
+            JOIN claim_docs cd ON c.claim_id = cd.claim_id
+            GROUP BY c.claim_id
             ORDER BY RANDOM()
         ''')
 
@@ -55,17 +57,18 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
 
     # Iterate through each claim in the test retrieval table randomly
     for row in tqdm(cursor.fetchall()):
-        doc_id = row[0]
-        claim = row[1]
+        doc_ids = row[1].split(',')
+
+        claim = row[0]
         hit_status = False
 
-        print("\nTarget document:", doc_id)
+        print("\nTarget documents:", doc_ids)
         evidence_wrapper = evidence_retriever.retrieve_documents(claim)
 
         # Store the results in a dictionary
         result = {
             "claim": claim,
-            "target_doc": doc_id,
+            "target_doc": doc_ids,
             "evidence": []
             }
 
@@ -81,12 +84,12 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
             })
 
             # If the evidence matches the target document, set the hit status to true
-            if evidence.doc_id == doc_id:
+            if evidence.doc_id in doc_ids:
                 hit_status = True
                 for e in result["evidence"]:
                     if e["doc_id"] == evidence.doc_id:
                         e["hit"] = True
-                print("Hit on document:", doc_id)
+                print("Hit on document:", evidence.doc_id)
                 break
         
         if hit_status:

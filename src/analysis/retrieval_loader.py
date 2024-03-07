@@ -13,20 +13,28 @@ def retrieval_loader():
     cursor = conn.cursor()
 
     # Drop table if it exists
-    cursor.execute("DROP TABLE IF EXISTS test_retrieval")
+    cursor.execute("DROP TABLE IF EXISTS claims")
+    conn.commit()
+    cursor.execute("DROP TABLE IF EXISTS claim_docs")
     conn.commit()
 
-    # Create table [id] [doc_id] [claim]
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS test_retrieval(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        doc_id TEXT NOT NULL,
-        claim TEXT NOT NULL,
-        UNIQUE(doc_id, claim));
-        ''')
+    # Create table for claims
+    cursor.execute("CREATE TABLE IF NOT EXISTS claims (id INTEGER PRIMARY KEY, claim_id INTEGER, claim TEXT NOT NULL);")
 
-    # Create index on doc_id
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_test_retrieval_doc_id ON test_retrieval(doc_id);")
+    # Create table for claim_docs
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS claim_docs (
+            claim_id INTEGER NOT NULL,
+            doc_id INTEGER NOT NULL,
+            FOREIGN KEY (claim_id) REFERENCES claims (claim_id),
+            FOREIGN KEY (doc_id) REFERENCES documents (doc_id),
+            PRIMARY KEY (claim_id, doc_id)
+        );
+    """)
+
+    # Create indexes
+    cursor.execute("CREATE INDEX IF NOT EXISTS claim_id_index ON claim_docs (claim_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS doc_id_index ON claim_docs (doc_id);")
 
     # Load data into database
     file_list = os.listdir(dataset_path)
@@ -40,12 +48,12 @@ def retrieval_loader():
                 for line in tqdm(f):
                     data = json.loads(line)
                     if data["label"] == "SUPPORTS" or data["label"] == "REFUTES":
-                        for evidence_set in data["evidence"]:
-                            for evidence in evidence_set:
-                                # Only insert unique doc_id, claim pairs
+                        cursor.execute("INSERT INTO claims (claim_id, claim) VALUES (?, ?)", (data["id"], data["claim"]))
+
+                        for set in data["evidence"]:
+                            for doc in set:
                                 try:
-                                    cursor.execute("INSERT INTO test_retrieval (doc_id, claim) VALUES (?, ?)", (evidence[2], data["claim"]))
+                                    cursor.execute("INSERT INTO claim_docs (claim_id, doc_id) VALUES (?, ?)", (data["id"], doc[2]))
                                 except sqlite3.IntegrityError:
                                     pass
-    
     conn.commit()

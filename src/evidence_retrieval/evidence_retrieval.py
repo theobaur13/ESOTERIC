@@ -5,7 +5,7 @@ import sentence_transformers
 from tqdm import tqdm
 from transformers import pipeline, LongformerTokenizer, LongformerForSequenceClassification
 from models import Evidence, EvidenceWrapper
-from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_focals, extract_questions, calculate_answerability_score_SelfCheckGPT, calculate_answerability_score_tiny, extract_answers
+from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_focals, extract_questions, calculate_answerability_score_SelfCheckGPT, calculate_answerability_score_tiny, extract_answers, extract_questions, extract_polar_questions
 from evidence_retrieval.tools.NER import extract_entities
 
 class EvidenceRetriever:
@@ -46,17 +46,27 @@ class EvidenceRetriever:
         entities = extract_entities(self.NER_pipe, query)
 
         # Retrieve documents with exact title match inc. docs with disambiguation in title
-        docs = []
+        title_match_docs = []
         for entity in entities:
             match_docs = title_match_search(entity, self.connection)
             for doc in match_docs:
-                if doc not in docs:
-                    docs.append(doc)
+                if doc not in title_match_docs:
+                    title_match_docs.append(doc)
 
         # Rerank documents:
         # score = 1 for exact match
         # score = cosine_similarity(info, query) for disambiguated docs
-        docs = score_docs(docs, query, self.nlp)
+        title_match_docs = score_docs(title_match_docs, query, self.nlp)
+    
+        # Split docs into title matched and disambiguated docs
+        exact_title_matched_docs = [doc for doc in title_match_docs if doc['method'] == "title_match"]
+        disambiguated_docs = [doc for doc in title_match_docs if doc['method'] == "disambiguation"]
+
+        # Sort title matched docs by score and take top 20
+        disambiguated_docs = sorted(disambiguated_docs, key=lambda x: x['score'], reverse=True)[:self.title_match_docs_limit]
+
+        # Apply threshold to title matched docs
+        disambiguated_docs = [doc for doc in disambiguated_docs if doc['score'] > self.title_match_search_threshold]
 
         # Retrieve X documents where entity is mentioned in the text
         # Rerank according to FAISS inner product between query and text
@@ -68,19 +78,8 @@ class EvidenceRetriever:
                 if doc not in textually_matched_docs:
                     textually_matched_docs.append(doc)
 
-        # Sort title matched docs by score and take top 20
-        docs = sorted(docs, key=lambda x: x['score'], reverse=True)[:self.title_match_docs_limit]
-
-        # Apply threshold to title matched docs
-        docs = [doc for doc in docs if doc['score'] > self.title_match_search_threshold]
-
         # Apply threshold to textually matched docs
         textually_matched_docs = [doc for doc in textually_matched_docs if doc['score'] > self.text_match_search_threshold]
-
-        # Add textually matched docs to the list
-        for doc in textually_matched_docs:
-            if doc not in docs:
-                docs.append(doc)
 
         # Generate questions for each focal point in the query
         claim_focals = extract_answers(self.answer_extraction_pipe, query)
@@ -93,12 +92,21 @@ class EvidenceRetriever:
             print("Question for focal point '" + focal['focal'] + "':", question)
 
         # Manually add polar questions for each focal point
-        polar_question = extract_questions(self.question_generation_pipe, "No", query)
-        questions.append(polar_question)
-        print("Polar question:", polar_question)
+        polar_questions = extract_polar_questions(self.nlp, self.question_generation_pipe, query)
+        for polar_question in polar_questions:
+            questions.append(polar_question)
+            print("Polar question:", polar_question)
+
+        # Add disambiguated docs and textually matched docs to list for reranking
+        rerank_docs = []
+        for doc in disambiguated_docs:
+            rerank_docs.append(doc)
+        for doc in textually_matched_docs:
+            if doc not in rerank_docs:
+                rerank_docs.append(doc)
 
         # Rescore documents by answerability
-        for doc in tqdm(docs):
+        for doc in tqdm(rerank_docs):
             doc_id = doc['doc_id']
             cursor = self.connection.cursor()
             cursor.execute("SELECT text FROM documents WHERE doc_id = ?", (doc_id,))
@@ -113,7 +121,15 @@ class EvidenceRetriever:
             doc['score'] = doc_score
 
         # Apply threshold to answerability scores
-        docs = [doc for doc in docs if doc['score'] > self.answerability_threshold]
+        rerank_docs = [doc for doc in rerank_docs if doc['score'] > self.answerability_threshold]
+
+        # Combine title matched, disambiguated and textually matched docs
+        docs = []
+        for doc in exact_title_matched_docs:
+            docs.append(doc)
+        for doc in rerank_docs:
+            if doc not in docs:
+                docs.append(doc)
 
         # Retrieve the text of 30 documents from db
         cursor = self.connection.cursor()
