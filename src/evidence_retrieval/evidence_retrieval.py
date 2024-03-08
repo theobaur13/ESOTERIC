@@ -43,7 +43,7 @@ class EvidenceRetriever:
         print("Starting document retrieval for query: '" + str(query) + "'")
         evidence_wrapper = EvidenceWrapper(query)
 
-        entities = extract_entities(self.NER_pipe, query)
+        entities = extract_entities(self.answer_extraction_pipe, self.NER_pipe, query)
 
         # Retrieve documents with exact title match inc. docs with disambiguation in title
         title_match_docs = []
