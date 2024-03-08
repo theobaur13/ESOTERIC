@@ -8,7 +8,7 @@ def title_match_search(query, conn):
     print("Searching for titles containing keyword '" + str(query) + "'")
 
     # Convert query to lowercase and replace spaces with underscores
-    formatted_query = query.replace(' ', '_').lower()
+    formatted_query = query.replace(' ', '_').replace(':', '-COLON-').lower()
 
     # Retrieve documents from db
     cursor = conn.cursor()
