@@ -8,43 +8,43 @@ def title_match_search(query, conn):
     print("Searching for titles containing keyword '" + str(query) + "'")
 
     # Convert query to lowercase and replace spaces with underscores
-    formatted_query = query.replace(' ', '_').replace(':', '-COLON-').lower()
+    formatted_query = '"' + query.replace(' ', '_').replace(':', '-COLON-').lower() + '"'
+    full_query = f"doc_id:{formatted_query}"
 
     # Retrieve documents from db
     cursor = conn.cursor()
     cursor.execute("""
-                   SELECT id, doc_id FROM documents WHERE LOWER(doc_id) = ?
-                   UNION
-                   SELECT id, doc_id FROM documents WHERE LOWER(doc_id) LIKE ?
-                   """, (formatted_query, formatted_query + '_-LRB-%-RRB-%',))
+            SELECT documents.id, documents.doc_id, bm25(documents_fts) AS rank FROM documents
+            INNER JOIN documents_fts ON documents.doc_id = documents_fts.doc_id
+            WHERE documents_fts MATCH ? ORDER BY rank
+            """, (full_query,))
     rows = cursor.fetchall()
 
-    # Return dictionary of {"id" : id, "doc_id" : doc_id}
     docs = []
+    match_query = formatted_query.replace('"', '')
     for row in rows:
         id = row[0]
         doc_id = row[1]
-        if doc_id not in [d['doc_id'] for d in docs]:
-            docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
-    return docs
+        lower_doc_id = doc_id.lower()
+        if lower_doc_id == match_query or lower_doc_id.startswith(match_query + '_-lrb-') and lower_doc_id.endswith('-rrb-'):
+            if doc_id not in [d['doc_id'] for d in docs]:
+                docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
 
 def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
     print("Searching for documents containing keyword '" + str(query) + "'")
 
     # Convert query to lowercase
-    formatted_query = '"' + query.lower().replace('"', '""') + '"'
+    formatted_query = 'text:"' + query.lower().replace('"', '""') + '"'
 
     # Retrieve documents from db containing query
     cursor = conn.cursor()
-    # cursor.execute("""
-    #             SELECT id, doc_id, text FROM documents WHERE LOWER(text) LIKE ? LIMIT ?
-    #             """, ("%" + formatted_query + "%", limit))
     cursor.execute("""
                 SELECT documents.id, documents.doc_id, documents.text, bm25(documents_fts) AS rank FROM documents
-                INNER JOIN documents_fts ON documents.id = documents_fts.doc_id
+                INNER JOIN documents_fts ON documents.doc_id = documents_fts.doc_id
                 WHERE documents_fts MATCH ? ORDER BY rank LIMIT ?
                 """, (formatted_query, limit))
     rows = cursor.fetchall()
+
     adjusted_rows = [row[:3] for row in rows]
 
     # Return empty list if no documents found
@@ -79,6 +79,7 @@ def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
 
     # Return sorted list of documents by score
     docs = sorted(docs, key=lambda x: x['score'], reverse=True)
+
     return docs
 
 # Score title matched and disambiguated docs

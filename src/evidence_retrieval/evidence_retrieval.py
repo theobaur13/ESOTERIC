@@ -102,7 +102,8 @@ class EvidenceRetriever:
         for doc in disambiguated_docs:
             rerank_docs.append(doc)
         for doc in textually_matched_docs:
-            if doc not in rerank_docs:
+            doc_id = doc['doc_id']
+            if doc_id not in [d['doc_id'] for d in rerank_docs]:
                 rerank_docs.append(doc)
 
         # Rescore documents by answerability
@@ -120,7 +121,7 @@ class EvidenceRetriever:
                         doc_score = answerability_score
 
             doc['score'] = doc_score
-
+            
         # Apply threshold to answerability scores
         rerank_docs = [doc for doc in rerank_docs if doc['score'] > self.answerability_threshold]
 

@@ -22,7 +22,7 @@ def main():
     # Specify doc limit parameters
     title_match_docs_limit = 1000
     text_match_search_db_limit = 1000
-    text_match_search_k_limit = 100
+    text_match_search_k_limit = 15
 
     # Specify score threshold parameters
     title_match_search_threshold = 0
