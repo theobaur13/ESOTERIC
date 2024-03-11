@@ -30,6 +30,8 @@ def title_match_search(query, conn):
             if doc_id not in [d['doc_id'] for d in docs]:
                 docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
 
+    return docs
+
 def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
     print("Searching for documents containing keyword '" + str(query) + "'")
 

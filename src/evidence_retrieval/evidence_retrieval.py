@@ -10,6 +10,8 @@ from evidence_retrieval.tools.NER import extract_entities
 
 class EvidenceRetriever:
     def __init__(self, data_path, title_match_docs_limit=20, text_match_search_db_limit=100, text_match_search_k_limit=10, title_match_search_threshold=0, text_match_search_threshold=0, answerability_threshold=0.5):
+        print ("Initialising evidence retriever")
+
         # Setup db connection and NLP models
         self.data_path = data_path
         self.connection = sqlite3.connect(os.path.join(self.data_path, 'data.db'))
@@ -24,6 +26,7 @@ class EvidenceRetriever:
         self.answerability_threshold = answerability_threshold
 
         # Setup NLP models for document retrieval
+        print("Initialising NLP models")
         self.nlp = spacy.load('en_core_web_sm')
         self.NER_pipe = pipeline("token-classification", model="Babelscape/wikineural-multilingual-ner", grouped_entities=True)
         self.FAISS_encoder = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L3-v2")
@@ -32,6 +35,8 @@ class EvidenceRetriever:
 
         # Setup for faster ranking method
         self.answerability_pipe = pipeline("question-answering", model="deepset/tinyroberta-squad2")
+
+        print("Evidence retriever initialised")
 
     def retrieve_evidence(self, query):
         # Retrieve evidence for a given query
