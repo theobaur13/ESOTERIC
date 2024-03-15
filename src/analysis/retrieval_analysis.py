@@ -66,7 +66,14 @@ def read_scores(ret_path):
     FEVER_passage_hits = 0
     FEVER_combined_hits = 0
 
+    execution_avg = 0
+    record_count = 0
+
     for record in data:
+        record_count += 1
+        execution_time = record["execution_time"]
+        execution_avg = (execution_avg * record_count + execution_time) / (record_count + 1)
+
         target_docs = []
         target_passages = []
         target_combined = []
@@ -127,7 +134,7 @@ def read_scores(ret_path):
         if set(target_combined).issubset(evidence_passages):
             FEVER_combined_hits += 1
 
-    return doc_hits, doc_misses, doc_targets, passage_hits, passage_misses, passage_targets, combined_hits, combined_misses, combined_targets, FEVER_doc_hits, FEVER_passage_hits, FEVER_combined_hits
+    return doc_hits, doc_misses, doc_targets, passage_hits, passage_misses, passage_targets, combined_hits, combined_misses, combined_targets, FEVER_doc_hits, FEVER_passage_hits, FEVER_combined_hits, execution_avg, record_count
 
 def skeleton(database_path, output_dir, preloaded_claim=None):
     # Set output path for results
@@ -140,10 +147,11 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
         cursor, evidence_retriever = initialiser(database_path)
 
     # Set up counters for calculation
-    doc_hits, doc_misses, doc_targets, passage_hits, passage_misses, passage_targets, combined_hits, combined_misses, combined_targets, FEVER_doc_hits, FEVER_passage_hits, FEVER_combined_hits = read_scores(output_path)
+    doc_hits, doc_misses, doc_targets, passage_hits, passage_misses, passage_targets, combined_hits, combined_misses, combined_targets, FEVER_doc_hits, FEVER_passage_hits, FEVER_combined_hits, execution_avg, record_count = read_scores(output_path)
 
     # Iterate through each claim in the test retrieval table randomly
     for row in tqdm(cursor.fetchall()):
+        record_count += 1
         claim = row[0]
         evidence_pairs = row[1].split(',')
         
@@ -153,7 +161,8 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
         start = time.time()
         evidence_wrapper = evidence_retriever.retrieve_documents(claim)
         end = time.time()
-        print("Execution time:", end - start)
+        execution_time = end - start
+        print("Execution time:", execution_time)
 
         target_passages = []
         target_combined = []
@@ -177,7 +186,8 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
         result = {
             "claim": claim,
             "target": [],
-            "evidence": []
+            "evidence": [],
+            "execution_time": end - start
             }
         
         # Add target documents to the result dictionary
@@ -259,8 +269,6 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
 
         # print scores
         precision_doc = doc_hits / (doc_hits + doc_misses)
-        print("Doc Hits: " + str(doc_hits))
-        print("Doc Targets: " + str(doc_targets))
         recall_doc = doc_hits / doc_targets
         precision_passage = passage_hits / (passage_hits + passage_misses)
         recall_passage = passage_hits / passage_targets
@@ -269,6 +277,7 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
         FEVER_doc_score = FEVER_doc_hits / len(data)
         FEVER_passage_score = FEVER_passage_hits / len(data)
         FEVER_combined_score = FEVER_combined_hits / len(data)
+        execution_avg = (execution_avg * record_count + execution_time) / (record_count + 1)
 
         print("Precision (doc): " + str(precision_doc*100) + "%")
         print("Recall (doc): " + str(recall_doc*100) + "%")
@@ -279,3 +288,4 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
         print("FEVER doc score: " + str(FEVER_doc_score*100) + "%")
         print("FEVER passage score: " + str(FEVER_passage_score*100) + "%")
         print("FEVER combined score: " + str(FEVER_combined_score*100) + "%")
+        print("Execution average: " + str(execution_avg) + "s")
