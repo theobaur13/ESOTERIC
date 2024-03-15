@@ -26,9 +26,10 @@ def retrieval_loader():
         CREATE TABLE IF NOT EXISTS claim_docs (
             claim_id INTEGER NOT NULL,
             doc_id INTEGER NOT NULL,
+            sent_id INTEGER NOT NULL,
             FOREIGN KEY (claim_id) REFERENCES claims (claim_id),
             FOREIGN KEY (doc_id) REFERENCES documents (doc_id),
-            PRIMARY KEY (claim_id, doc_id)
+            PRIMARY KEY (claim_id, doc_id, sent_id)
         );
     """)
 
@@ -53,7 +54,7 @@ def retrieval_loader():
                         for set in data["evidence"]:
                             for doc in set:
                                 try:
-                                    cursor.execute("INSERT INTO claim_docs (claim_id, doc_id) VALUES (?, ?)", (data["id"], doc[2]))
+                                    cursor.execute("INSERT INTO claim_docs (claim_id, doc_id, sent_id) VALUES (?, ?, ?)", (data["id"], doc[2], doc[3]))
                                 except sqlite3.IntegrityError:
                                     pass
     conn.commit()
