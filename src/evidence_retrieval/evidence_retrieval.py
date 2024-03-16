@@ -135,7 +135,7 @@ class EvidenceRetriever:
         for doc in exact_title_matched_docs:
             docs.append(doc)
         for doc in rerank_docs:
-            if doc not in docs:
+            if doc['doc_id'] not in [d['doc_id'] for d in docs]:
                 docs.append(doc)
 
         # Retrieve the text of 30 documents from db
