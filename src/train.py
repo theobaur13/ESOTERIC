@@ -1,5 +1,5 @@
 import os
-from train.polar_generation import create_dataset
+from train.relevancy_classification import create_dataset
 
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
