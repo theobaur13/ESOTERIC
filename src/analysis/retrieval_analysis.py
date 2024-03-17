@@ -14,7 +14,7 @@ def initialiser(database_path, preloaded_claim=None):
     # Select claims to test from db
     if preloaded_claim:
         cursor.execute('''
-            SELECT c.claim, GROUP_CONCAT(cd.doc_id || ':' || cd.sent_id) AS doc_sent_pairs
+            SELECT c.claim, GROUP_CONCAT(cd.doc_id || ':' || cd.sent_id, ';') AS doc_sent_pairs
             FROM claims c
             JOIN claim_docs cd ON c.claim_id = cd.claim_id
             WHERE c.claim_id = ?
@@ -22,7 +22,7 @@ def initialiser(database_path, preloaded_claim=None):
         ''', (preloaded_claim,))
     else:
         cursor.execute('''
-            SELECT c.claim, GROUP_CONCAT(cd.doc_id || ':' || cd.sent_id) AS doc_sent_pairs
+            SELECT c.claim, GROUP_CONCAT(cd.doc_id || ':' || cd.sent_id, ';') AS doc_sent_pairs
             FROM claims c
             JOIN claim_docs cd ON c.claim_id = cd.claim_id
             GROUP BY c.claim_id
@@ -153,7 +153,7 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
     for row in tqdm(cursor.fetchall()):
         record_count += 1
         claim = row[0]
-        evidence_pairs = row[1].split(',')
+        evidence_pairs = row[1].split(';')
         
         target_docs = list(set([pair.split(':')[0] for pair in evidence_pairs]))
         print("\nTarget documents:", target_docs)

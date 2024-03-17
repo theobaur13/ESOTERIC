@@ -29,7 +29,8 @@ class EvidenceRetriever:
         # Setup NLP models for document retrieval
         print("Initialising NLP models")
         self.nlp = spacy.load('en_core_web_sm')
-        self.NER_model = SpanMarkerModel.from_pretrained("lxyuan/span-marker-bert-base-multilingual-uncased-multinerd")
+        # self.NER_model = SpanMarkerModel.from_pretrained("lxyuan/span-marker-bert-base-multilingual-uncased-multinerd")
+        self.NER_model = pipeline("token-classification", model="Babelscape/wikineural-multilingual-ner", grouped_entities=True)
         self.FAISS_encoder = sentence_transformers.SentenceTransformer("paraphrase-MiniLM-L3-v2")
         self.question_generation_pipe = pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-question-generation-ap", max_length=256)
         self.answer_extraction_pipe = pipeline("text2text-generation", model="vabatista/t5-small-answer-extraction-en")
@@ -50,7 +51,7 @@ class EvidenceRetriever:
         evidence_wrapper = EvidenceWrapper(query)
 
         print("Extracting entities from text")
-        entities = extract_entities(self.NER_model, query)
+        entities = extract_entities(self.answer_extraction_pipe, self.NER_model, query)
         print("Entities:", entities)
 
         # Retrieve documents with exact title match inc. docs with disambiguation in title
