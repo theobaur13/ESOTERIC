@@ -1,21 +1,28 @@
 import os
-from transformers import pipeline
+import time
+from transformers import pipeline, AutoModel, AutoTokenizer, DistilBertForSequenceClassification
 from train.relevancy_classification import create_dataset, train_model
 
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    output_dir = os.path.join(current_dir, '..', 'data', 'train')
-    print(output_dir)
+    data_output_dir = os.path.join(current_dir, '..', 'data', 'train')
     db_path = os.path.join(current_dir, '..', 'data', 'data.db')
-    create_dataset(db_path, output_dir)
-    dataset_file = os.path.join(output_dir, 'relevancy_classification.json')
-    model_name = "distilbert/distilbert-base-uncased-finetuned-sst-2-english"
-    model, tokenizer = train_model(dataset_file, model_name, output_dir)
-    pipeline = pipeline('text-classification', model=model, tokenizer=tokenizer)
-    claim = "Chris Hemsworth appeared in A Perfect Getaway."
-    sentence = "Hemsworth has also appeared in the science fiction action film Star Trek (2009)."
+    create_dataset(db_path, data_output_dir)
+
+    dataset_file = os.path.join(data_output_dir, 'relevancy_classification.json')
+    model_output_dir = os.path.join(current_dir, '..', 'models', 'relevancy_classification')
+    model_name = "distilbert/distilbert-base-uncased"
+    train_model(dataset_file, model_name, model_output_dir)
+
+    model = DistilBertForSequenceClassification.from_pretrained(model_output_dir)
+    tokenizer = AutoTokenizer.from_pretrained(model_output_dir)
+    pipe = pipeline('text-classification', model=model, tokenizer=tokenizer)
+    claim = "Murda Beatz's real name is Marshall Mathers."
+    sentence = "Hemsworth has also appeared in the science fiction action film A Perfect Getaway."
     input_pair = f"{claim} [SEP] {sentence}"
-    result = pipeline(input_pair)
+    start_time = time.time()
+    result = pipe(input_pair)
+    print("Inference time:", time.time() - start_time)
     print(result)
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ import numpy as np
 import evaluate
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments
 
 def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
     ouput_file = os.path.join(output_dir, 'relevancy_classification.json')
@@ -148,7 +148,7 @@ def train_model(dataset_file, model_name, output_dir):
     print(f"Validation texts: {len(val_texts)}, Validation labels: {len(val_labels)}")
     print(f"Test texts: {len(test_texts)}, Test labels: {len(test_labels)}")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = DistilBertTokenizer.from_pretrained(model_name)
 
     train_encodings = tokenizer(train_texts, truncation=True, padding=True)
     val_encodings = tokenizer(val_texts, truncation=True, padding=True)
@@ -172,15 +172,16 @@ def train_model(dataset_file, model_name, output_dir):
     val_dataset = RelevancyDataset(val_encodings, val_labels)
     test_dataset = RelevancyDataset(test_encodings, test_labels)
 
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+    model = DistilBertForSequenceClassification.from_pretrained(model_name, num_labels=2)
 
     logging_dir = os.path.join(output_dir, 'logs')
 
+    # Parameters designed for colab machine
     training_args = TrainingArguments(
         output_dir=output_dir,           # output directory
         num_train_epochs=3,              # total number of training epochs
-        per_device_train_batch_size=2,  # batch size per device during training
-        per_device_eval_batch_size=4,   # batch size for evaluation
+        per_device_train_batch_size=24,  # batch size per device during training
+        per_device_eval_batch_size=30,   # batch size for evaluation
         warmup_steps=500,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
         logging_dir=logging_dir,         # directory for storing logs
