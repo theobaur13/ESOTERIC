@@ -25,7 +25,8 @@ def main(batch_limit=None):
         CREATE TABLE IF NOT EXISTS documents(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         doc_id TEXT NOT NULL,
-        text TEXT NOT NULL);
+        text TEXT NOT NULL,
+        lines TEXT NOT NULL);
         ''')
 
     # Create index on id and doc_id
@@ -34,9 +35,6 @@ def main(batch_limit=None):
 
     # Create virtual table for full text search
     cursor.execute("CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING FTS5(doc_id, text);")
-
-    doc_ids = []
-    documents = []
 
     # import jsonl file by file into the db
     print("Loading " + str(batch_limit) + " documents into database")
@@ -55,9 +53,7 @@ def main(batch_limit=None):
             with open(file_path) as f:
                 for line in f:
                     data = json.loads(line)
-                    documents.append(data['text'])
-                    doc_ids.append(data['id'])
-                    cursor.execute("INSERT INTO documents (doc_id, text) VALUES (?, ?)", (data['id'], data['text']))
+                    cursor.execute("INSERT INTO documents (doc_id, text, lines) VALUES (?, ?, ?)", (data['id'], data['text'], data['lines']))
                     cursor.execute("INSERT INTO documents_fts (doc_id, text) VALUES (?, ?)", (data['id'], data['text']))
         else:
             raise ValueError('Unsupported file format')

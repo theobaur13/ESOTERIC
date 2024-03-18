@@ -34,6 +34,7 @@ def retrieval_loader():
     """)
 
     # Create indexes
+    cursor.execute("CREATE INDEX IF NOT EXISTS claim_id_index ON claims (claim_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS claim_id_index ON claim_docs (claim_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS doc_id_index ON claim_docs (doc_id);")
 
