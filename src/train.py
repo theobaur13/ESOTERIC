@@ -7,7 +7,7 @@ def main():
     output_dir = os.path.join(current_dir, '..', 'data', 'train')
     print(output_dir)
     db_path = os.path.join(current_dir, '..', 'data', 'data.db')
-    # create_dataset(db_path, output_dir)
+    create_dataset(db_path, output_dir)
     dataset_file = os.path.join(output_dir, 'relevancy_classification.json')
     model_name = "distilbert/distilbert-base-uncased-finetuned-sst-2-english"
     model, tokenizer = train_model(dataset_file, model_name, output_dir)

@@ -10,7 +10,7 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
 
-def create_dataset(database_path, output_dir, limit=1000, x=1, y=1):
+def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
     ouput_file = os.path.join(output_dir, 'relevancy_classification.json')
 
     conn = sqlite3.connect(database_path)
@@ -185,17 +185,18 @@ def train_model(dataset_file, model_name, output_dir):
         weight_decay=0.01,               # strength of weight decay
         logging_dir=logging_dir,         # directory for storing logs
         evaluation_strategy="epoch",
+        save_total_limit=8,
     )
 
     trainer = Trainer(
         model=model,                         # the instantiated 🤗 Transformers model to be trained
         args=training_args,                  # training arguments, defined above
         train_dataset=train_dataset,         # training dataset
-        eval_dataset=val_dataset             # evaluation dataset
+        eval_dataset=val_dataset,             # evaluation dataset
     )
 
     print("Starting model training")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
     print("Model training complete")
     trainer.evaluate(test_dataset)
 
