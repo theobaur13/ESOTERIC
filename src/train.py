@@ -9,7 +9,7 @@ def main():
     db_path = os.path.join(current_dir, '..', 'data', 'data.db')
     # create_dataset(db_path, output_dir)
     dataset_file = os.path.join(output_dir, 'relevancy_classification.json')
-    model_name = "FacebookAI/roberta-base"
+    model_name = "distilbert/distilbert-base-uncased-finetuned-sst-2-english"
     model, tokenizer = train_model(dataset_file, model_name, output_dir)
     pipeline = pipeline('text-classification', model=model, tokenizer=tokenizer)
     claim = "Chris Hemsworth appeared in A Perfect Getaway."
