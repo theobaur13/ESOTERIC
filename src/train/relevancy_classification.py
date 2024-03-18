@@ -3,7 +3,12 @@ import re
 import json
 import os
 import random
+import torch
+import numpy as np
+import evaluate
 from tqdm import tqdm
+from sklearn.model_selection import train_test_split
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
 
 def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
     ouput_file = os.path.join(output_dir, 'relevancy_classification.json')
@@ -70,27 +75,6 @@ def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
                     """.format(','.join('?' * len(relevant_sentences_ids))), [d['doc_id'] for d in relevant_sentences_ids])
         for doc in cursor.fetchall():
             documents.append({"doc_id": doc[0], "lines": doc[1]})
-
-        # pre_select_limit = 100
-        # placeholders = ','.join('?' * len(relevant_sentences_ids))
-        
-        # sql_query = f"""
-        #     SELECT doc_id, lines
-        #     FROM (
-        #         SELECT doc_id, lines
-        #         FROM documents
-        #         WHERE doc_id NOT IN ({placeholders})
-        #         LIMIT {pre_select_limit}  -- Pre-select a reasonable number of documents
-        #     ) AS pre_selected
-        #     ORDER BY RANDOM()
-        #     LIMIT ?;
-        # """
-
-        # # Select different_doc_irrelevant_sentence_count documents that are not listed in the doc_id column relevant_sentences_ids
-        # parameters = [d['doc_id'] for d in relevant_sentences_ids] + [different_doc_irrelevant_sentence_count]
-        # cursor.execute(sql_query, parameters)
-        # for doc in cursor.fetchall():
-        #     documents.append({"doc_id": doc[0], "lines": doc[1]})
             
         # Find max id column in documents
         cursor.execute("SELECT MAX(id) FROM documents")
@@ -141,3 +125,81 @@ def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
 
     with open(ouput_file, 'w') as f:
         json.dump(dataset, f, indent=4)
+
+def train_model(dataset_file, model_name, output_dir):
+    with open(dataset_file) as f:
+        dataset = json.load(f)
+        print("Dataset loaded successfully")
+
+    claims = dataset['claims']
+    sentences = []
+    labels = []
+
+    for claim in claims:
+        for sentence in claim['sentences']:
+            concatenated_text = f"{claim['claim']} [SEP] {sentence['sentence']}"
+            sentences.append(concatenated_text)
+            labels.append(sentence['label'])
+
+    train_texts, test_texts, train_labels, test_labels = train_test_split(sentences, labels, test_size=0.2, random_state=42)
+    val_texts, test_texts, val_labels, test_labels = train_test_split(test_texts, test_labels, test_size=0.5, random_state=42)
+
+    print(f"Training texts: {len(train_texts)}, Training labels: {len(train_labels)}")
+    print(f"Validation texts: {len(val_texts)}, Validation labels: {len(val_labels)}")
+    print(f"Test texts: {len(test_texts)}, Test labels: {len(test_labels)}")
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    train_encodings = tokenizer(train_texts, truncation=True, padding=True)
+    val_encodings = tokenizer(val_texts, truncation=True, padding=True)
+    test_encodings = tokenizer(test_texts, truncation=True, padding=True)
+    print("Tokenization complete")
+
+    class RelevancyDataset(torch.utils.data.Dataset):
+        def __init__(self, encodings, labels):
+            self.encodings = encodings
+            self.labels = labels
+
+        def __getitem__(self, idx):
+            item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+            item['labels'] = torch.tensor(self.labels[idx])
+            return item
+
+        def __len__(self):
+            return len(self.labels)
+        
+    train_dataset = RelevancyDataset(train_encodings, train_labels)
+    val_dataset = RelevancyDataset(val_encodings, val_labels)
+    test_dataset = RelevancyDataset(test_encodings, test_labels)
+
+    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+
+    logging_dir = os.path.join(output_dir, 'logs')
+
+    training_args = TrainingArguments(
+        output_dir=output_dir,           # output directory
+        num_train_epochs=3,              # total number of training epochs
+        per_device_train_batch_size=2,  # batch size per device during training
+        per_device_eval_batch_size=6,   # batch size for evaluation
+        warmup_steps=500,                # number of warmup steps for learning rate scheduler
+        weight_decay=0.01,               # strength of weight decay
+        logging_dir=logging_dir,         # directory for storing logs
+        evaluation_strategy="epoch",
+    )
+
+    trainer = Trainer(
+        model=model,                         # the instantiated 🤗 Transformers model to be trained
+        args=training_args,                  # training arguments, defined above
+        train_dataset=train_dataset,         # training dataset
+        eval_dataset=val_dataset             # evaluation dataset
+    )
+
+    print("Starting model training")
+    trainer.train()
+    print("Model training complete")
+    trainer.evaluate(test_dataset)
+
+    model.save_pretrained(output_dir)
+    tokenizer.save_pretrained(output_dir)
+    print("Model and tokenizer saved successfully")
+    return model, tokenizer
