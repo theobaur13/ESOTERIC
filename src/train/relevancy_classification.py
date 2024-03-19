@@ -38,6 +38,7 @@ def create_dataset(database_path, output_dir, limit=10000, x=2, y=2):
     rows = [row for row in rows if row["lines"] is not None]
 
     dataset = {"claims": []}
+    claims_lookup= {}
     for row in tqdm(rows):
         claim = row["claim"]
         text = row["lines"][0]
@@ -47,13 +48,14 @@ def create_dataset(database_path, output_dir, limit=10000, x=2, y=2):
         pattern = re.compile(r'\n\d+\t')
         sentences = pattern.split(text)
         relevant_sentence = sentences[sent_id]
+        
+        if claim not in claims_lookup:
+            new_claim_entry = {"claim": claim, "sentences": [{"doc_id": doc_id, "sent_id": sent_id, "sentence": relevant_sentence, "label": 1}]}
+            dataset['claims'].append(new_claim_entry)
+            claims_lookup[claim] = new_claim_entry["sentences"]
 
-        if claim not in [d['claim'] for d in dataset['claims']]:
-            dataset['claims'].append({"claim": claim, "sentences": []})
-
-        for row in dataset['claims']:
-            if claim == row['claim']:
-                row['sentences'].append({"doc_id": doc_id, "sent_id": sent_id, "sentence": relevant_sentence, "label": 1})
+        else:
+            claims_lookup[claim].append({"doc_id": doc_id, "sent_id": sent_id, "sentence": relevant_sentence, "label": 1})
 
     for row in tqdm(dataset['claims']):
         relevent_sentence_count = len(row['sentences'])
