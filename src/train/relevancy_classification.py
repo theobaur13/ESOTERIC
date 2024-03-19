@@ -8,7 +8,7 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments
 
-def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
+def create_dataset(database_path, output_dir, limit=10000, x=2, y=2):
     ouput_file = os.path.join(output_dir, 'relevancy_classification.json')
 
     conn = sqlite3.connect(database_path)
@@ -203,3 +203,40 @@ def train_model(dataset_file, model_name, output_dir):
     tokenizer.save_pretrained(output_dir)
     print("Model and tokenizer saved successfully")
     return model, tokenizer
+
+def evaluate_model(dataset_file, model_name):
+    with open(dataset_file) as f:
+        dataset = json.load(f)
+        print("Dataset loaded successfully")
+
+    claims = dataset['claims']
+    sentences = []
+    labels = []
+
+    for claim in claims:
+        for sentence in claim['sentences']:
+            concatenated_text = f"{claim['claim']} [SEP] {sentence['sentence']}"
+            sentences.append(concatenated_text)
+            labels.append(sentence['label'])
+
+    tokenizer = DistilBertTokenizer.from_pretrained(model_name)
+    encodings = tokenizer(sentences, truncation=True, padding=True, max_length=512)
+
+    class RelevancyDataset(torch.utils.data.Dataset):
+        def __init__(self, encodings, labels):
+            self.encodings = encodings
+            self.labels = labels
+
+        def __getitem__(self, idx):
+            item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+            item['labels'] = torch.tensor(self.labels[idx])
+            return item
+
+        def __len__(self):
+            return len(self.labels)
+        
+    dataset = RelevancyDataset(encodings, labels)
+
+    model = DistilBertForSequenceClassification.from_pretrained(model_name, num_labels=2)
+    trainer = Trainer(model=model)
+    trainer.evaluate(dataset)

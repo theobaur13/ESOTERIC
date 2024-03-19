@@ -1,12 +1,14 @@
 import os
 import time
 from transformers import pipeline, AutoModel, AutoTokenizer, DistilBertForSequenceClassification
-from train.relevancy_classification import create_dataset, train_model
+from train.relevancy_classification import create_dataset, train_model, evaluate_model
 
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     data_output_dir = os.path.join(current_dir, '..', 'data', 'train')
     model_output_dir = os.path.join(current_dir, '..', 'models', 'relevancy_classification')
+    dataset_file = os.path.join(data_output_dir, 'relevancy_classification.json')
+    model_name = "distilbert/distilbert-base-uncased"
 
     dataset_creation = input("Do you want to create a new dataset? (y/n): ")
     if dataset_creation == "y":
@@ -18,8 +20,6 @@ def main():
 
     model_creation = input("Do you want to train a new model? (y/n): ")
     if model_creation == "y":
-        dataset_file = os.path.join(data_output_dir, 'relevancy_classification.json')
-        model_name = "distilbert/distilbert-base-uncased"
         train_model(dataset_file, model_name, model_output_dir)
 
     run_model = input("Do you want to run the model? (y/n): ")
@@ -34,6 +34,10 @@ def main():
         result = pipe(input_pair)
         print("Inference time:", time.time() - start_time)
         print(result)
+
+    model_evaluation = input("Do you want to evaluate a model? (y/n): ")
+    if model_evaluation == "y":
+        evaluate_model(dataset_file, model_output_dir)
 
 if __name__ == "__main__":
     main()
