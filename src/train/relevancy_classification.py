@@ -150,9 +150,9 @@ def train_model(dataset_file, model_name, output_dir):
 
     tokenizer = DistilBertTokenizer.from_pretrained(model_name)
 
-    train_encodings = tokenizer(train_texts, truncation=True, padding=True)
-    val_encodings = tokenizer(val_texts, truncation=True, padding=True)
-    test_encodings = tokenizer(test_texts, truncation=True, padding=True)
+    train_encodings = tokenizer(train_texts, truncation=True, padding=True, max_length=512)
+    val_encodings = tokenizer(val_texts, truncation=True, padding=True, max_length=512)
+    test_encodings = tokenizer(test_texts, truncation=True, padding=True, max_length=512)
     print("Tokenization complete")
 
     class RelevancyDataset(torch.utils.data.Dataset):
