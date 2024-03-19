@@ -4,8 +4,6 @@ import json
 import os
 import random
 import torch
-import numpy as np
-import evaluate
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments
@@ -33,7 +31,7 @@ def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
 
     # Select the lines at each doc_id and append them to the rows list
     for row in tqdm(rows):
-        cursor.execute("SELECT lines FROM documents WHERE doc_id = ?", (row["doc_id"],))
+        cursor.execute("SELECT text FROM documents WHERE doc_id = ?", (row["doc_id"],))
         row["lines"] = cursor.fetchone()
 
     # Remove rows where the lines are None
@@ -69,7 +67,7 @@ def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
         documents = []
         # Select documents that are listed in the doc_id column relevant_sentences_ids
         cursor.execute("""
-                    SELECT doc_id, lines
+                    SELECT doc_id, text
                     FROM documents
                     WHERE doc_id IN ({})
                     """.format(','.join('?' * len(relevant_sentences_ids))), [d['doc_id'] for d in relevant_sentences_ids])
@@ -86,7 +84,7 @@ def create_dataset(database_path, output_dir, limit=10000, x=1, y=1):
 
             found_different = False
             while not found_different:
-                cursor.execute("SELECT doc_id, lines FROM documents WHERE id = ?", (random_id,))
+                cursor.execute("SELECT doc_id, text FROM documents WHERE id = ?", (random_id,))
                 doc = cursor.fetchone()
                 doc_id = doc[0]
                 text = doc[1]

@@ -39,11 +39,13 @@ def main():
     for evidence in evidence_collection.get_evidences():
         evidence.set_wiki_url(conn)
         print("\nDoc ID:", evidence.doc_id)
-        print("Evidence Document:", evidence.evidence_text)
+        # print("Evidence Document:\n", evidence.evidence_text)
         print("Document Score:", str(evidence.doc_score))
-        print("Sentence:", evidence.evidence_sentence)
-        print("Sentence Score:", str(evidence.sentence_score))
         print("Wiki URL:", evidence.wiki_url)
+        for sentence in evidence.sentences:
+            print("ID:", sentence.sent_id)
+            print("Sentence:", sentence.sentence)
+            print("Sentence Score:", sentence.score)
 
 if __name__ == '__main__':
     main()

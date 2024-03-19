@@ -79,22 +79,26 @@ def read_scores(ret_path):
         target_combined = []
         evidence_docs = [evidence["doc_id"] for evidence in record["evidence"]]
         
+        # Set target documents
         for target in record["target"]:
             if target["doc_id"] not in target_docs:
                 target_docs.append(target["doc_id"])
         
+        # Set target passages
         for target in record["target"]:
             target_combined.append((target["doc_id"], target["sent_id"]))
             if target["doc_id"] in evidence_docs:
                 target_passages.append((target["doc_id"], target["sent_id"]))
 
+        # Set counters for targets
         doc_targets += len(target_docs)
         passage_targets += len(target_passages)
         combined_targets += len(target_combined)
 
         evidence_passages = []
         for evidence in record["evidence"]:
-            evidence_passages.append((evidence["doc_id"], evidence["sent_id"]))
+            for sent_id in evidence["sent_id"]:
+                evidence_passages.append((evidence["doc_id"], str(sent_id)))
 
             doc_hit = False
             passage_hit = False
@@ -103,11 +107,12 @@ def read_scores(ret_path):
             if evidence["doc_id"] in target_docs:
                 doc_hit = True
             
-            if (evidence["doc_id"], evidence["sent_id"]) in target_passages:
-                passage_hit = True
-                    
-            if doc_hit and passage_hit:
-                combined_hit = True
+            for sent_id in evidence["sent_id"]:
+                if (evidence["doc_id"], str(sent_id)) in target_passages:
+                    passage_hit = True
+
+                if doc_hit and passage_hit:
+                    combined_hit = True
 
             if doc_hit:
                 doc_hits += 1
@@ -159,7 +164,7 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
         print("\nTarget documents:", target_docs)
 
         start = time.time()
-        evidence_wrapper = evidence_retriever.retrieve_documents(claim)
+        evidence_wrapper = evidence_retriever.retrieve_evidence(claim)
         end = time.time()
         execution_time = end - start
         print("Execution time:", execution_time)
@@ -208,17 +213,19 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
             if evidence.doc_id in target_docs:
                 doc_hit = True
 
-            if (evidence.doc_id, evidence.sent_id) in target_passages:
-                sentence_hit = True
-            
-            if (evidence.doc_id, evidence.sent_id) in target_combined:
-                combined_hit = True
+            for sentence in evidence.sentences:
+                if (evidence.doc_id, str(sentence.sent_id)) in target_passages:
+                    sentence_hit = True
+
+                if (evidence.doc_id, str(sentence.sent_id)) in target_combined:
+                    combined_hit = True
 
             # Add evidence to the result dictionary
             result["evidence"].append({
                 "entity" : evidence.entity,
                 "doc_id": evidence.doc_id,
-                "sent_id": evidence.sent_id,
+                "sent_id": [sentence.sent_id for sentence in evidence.sentences],
+                # "sent_id": evidence.sent_id,
                 "score": str(evidence.doc_score),
                 "method" : evidence.doc_retrieval_method,
                 "doc_hit" : doc_hit,
@@ -240,7 +247,10 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
                 combined_misses += 1
 
         evidence_docs = [evidence.doc_id for evidence in evidence_wrapper.get_evidences()]
-        evidence_passages = [(evidence.doc_id, evidence.sent_id) for evidence in evidence_wrapper.get_evidences()]
+        evidence_passages = []
+        for evidence in evidence_wrapper.get_evidences():
+            for sentence in evidence.sentences:
+                evidence_passages.append((evidence.doc_id, str(sentence.sent_id)))
 
         # if target_docs are all in evidence_docs, then it's a FEVER doc hit
         if set(target_docs).issubset(evidence_docs):

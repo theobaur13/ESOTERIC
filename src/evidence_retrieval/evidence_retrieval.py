@@ -1,13 +1,13 @@
 import os
+import re
 import sqlite3
 import spacy
 import sentence_transformers
 from tqdm import tqdm
-from transformers import pipeline, LongformerTokenizer, LongformerForSequenceClassification
-from models import Evidence, EvidenceWrapper
+from transformers import pipeline, DistilBertForSequenceClassification, AutoTokenizer
+from models import Evidence, EvidenceWrapper, Sentence
 from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_focals, extract_questions, calculate_answerability_score_SelfCheckGPT, calculate_answerability_score_tiny, extract_answers, extract_questions, extract_polar_questions
 from evidence_retrieval.tools.NER import extract_entities
-from span_marker import SpanMarkerModel
 
 class EvidenceRetriever:
     def __init__(self, data_path, title_match_docs_limit=20, text_match_search_db_limit=100, text_match_search_k_limit=10, title_match_search_threshold=0, text_match_search_threshold=0, answerability_threshold=0.5):
@@ -38,6 +38,11 @@ class EvidenceRetriever:
         # Setup for faster ranking method
         self.answerability_pipe = pipeline("question-answering", model="deepset/tinyroberta-squad2")
 
+        # Setup relevance classification model
+        relevance_classification_model_dir = os.path.join(self.data_path, '..', 'models', 'relevancy_classification')
+        relevance_classification_model = DistilBertForSequenceClassification.from_pretrained(relevance_classification_model_dir)
+        relevance_classification_tokenizer = AutoTokenizer.from_pretrained(relevance_classification_model_dir)
+        self.relevance_classification_tokenizer_pipe = pipeline('text-classification', model=relevance_classification_model, tokenizer=relevance_classification_tokenizer)
         print("Evidence retriever initialised")
 
     def retrieve_evidence(self, query):
@@ -153,4 +158,25 @@ class EvidenceRetriever:
         return evidence_wrapper
 
     def retrieve_passages(self, evidence_wrapper):
+        base_claim = evidence_wrapper.get_claim()
+        evidences = evidence_wrapper.get_evidences()
+        for evidence in evidences:
+            text = evidence.evidence_text
+
+            pattern = r'\n\d+\t'
+            sentences = re.split(pattern, text)
+            sentences = [sentence for sentence in sentences if sentence != ""]
+
+            evidence_sentences = []
+            for sentence in sentences:
+                sent_id = sentences.index(sentence)
+                input_pair = f"{base_claim} [SEP] {sentence}"
+                result = self.relevance_classification_tokenizer_pipe(input_pair)
+                label = result[0]['label']
+                relevance_score = result[0]['score']
+                if label == "LABEL_1":
+                    evidence_sentence = Sentence(sentence=sentence, score=relevance_score, doc_id=evidence.doc_id, sent_id=sent_id)
+                    evidence_sentences.append(evidence_sentence)
+
+            evidence.set_evidence_sentences(evidence_sentences)
         return evidence_wrapper

@@ -25,8 +25,7 @@ def main(batch_limit=None):
         CREATE TABLE IF NOT EXISTS documents(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         doc_id TEXT NOT NULL,
-        text TEXT NOT NULL,
-        lines TEXT NOT NULL);
+        text TEXT NOT NULL);
         ''')
 
     # Create index on id and doc_id
@@ -53,8 +52,8 @@ def main(batch_limit=None):
             with open(file_path) as f:
                 for line in f:
                     data = json.loads(line)
-                    cursor.execute("INSERT INTO documents (doc_id, text, lines) VALUES (?, ?, ?)", (data['id'], data['text'], data['lines']))
-                    cursor.execute("INSERT INTO documents_fts (doc_id, text) VALUES (?, ?)", (data['id'], data['text']))
+                    cursor.execute("INSERT INTO documents (doc_id, text) VALUES (?, ?)", (data['id'], data['lines']))
+                    cursor.execute("INSERT INTO documents_fts (doc_id, text) VALUES (?, ?)", (data['id'], data['lines']))
         else:
             raise ValueError('Unsupported file format')
     conn.commit()
