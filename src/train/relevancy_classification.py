@@ -59,8 +59,8 @@ def create_dataset(database_path, output_dir, limit=10000, x=2, y=2):
 
     for row in tqdm(dataset['claims']):
         relevent_sentence_count = len(row['sentences'])
-        same_doc_irrelevant_sentence_count = x * relevent_sentence_count
-        different_doc_irrelevant_sentence_count = y * relevent_sentence_count
+        same_doc_irrelevant_sentence_count = round(x * relevent_sentence_count, 0)
+        different_doc_irrelevant_sentence_count = round(y * relevent_sentence_count, 0)
 
         relevant_sentences_ids = []
         for sentence in row['sentences']:
@@ -189,6 +189,7 @@ def train_model(dataset_file, model_name, output_dir):
         save_total_limit=8,
         logging_strategy="steps",
         logging_steps=1,
+        learning_rate=1e-5,
     )
 
     trainer = Trainer(
