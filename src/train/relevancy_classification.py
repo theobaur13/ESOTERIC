@@ -187,6 +187,8 @@ def train_model(dataset_file, model_name, output_dir):
         logging_dir=logging_dir,         # directory for storing logs
         evaluation_strategy="epoch",
         save_total_limit=8,
+        logging_strategy="steps",
+        logging_steps=1,
     )
 
     trainer = Trainer(
