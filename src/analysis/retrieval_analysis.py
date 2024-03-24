@@ -222,7 +222,6 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
 
             # Add evidence to the result dictionary
             result["evidence"].append({
-                "entity" : evidence.entity,
                 "doc_id": evidence.doc_id,
                 "sent_id": [sentence.sent_id for sentence in evidence.sentences],
                 # "sent_id": evidence.sent_id,

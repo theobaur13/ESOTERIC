@@ -137,7 +137,6 @@ class EvidenceRetriever:
                 docs.append(doc)
 
         # Retrieve the text of 30 documents from db
-        cursor = self.connection.cursor()
         for id, doc_id, score, method in [(doc['id'], doc['doc_id'], doc['score'], doc['method']) for doc in docs]:
             response = self.es.get(index="documents", id=id)
             text = response['_source']['content']

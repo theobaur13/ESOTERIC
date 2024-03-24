@@ -9,3 +9,4 @@ test.py
 claims/
 data/analysis/
 models/
+tmp_trainer/

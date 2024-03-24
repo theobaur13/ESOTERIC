@@ -7,19 +7,13 @@ class Evidence:
         self.evidence_text = evidence_text
         self.sentences = sentences
 
-        self.wiki_url = wiki_url
         self.doc_retrieval_method = doc_retrieval_method
 
     def set_evidence_sentences(self, sentences):
         self.sentences = sentences
 
-    def set_wiki_url(self, conn):
-        cursor = conn.cursor()
-        cursor.execute("SELECT doc_id FROM documents WHERE doc_id = ?", (self.doc_id,))
-        self.wiki_url = "https://en.wikipedia.org/wiki/" + str(cursor.fetchone()[0])
-
     def __str__(self):
-        return f"Query: {self.query}\nDoc ID: {self.doc_id}\nDoc Score: {self.doc_score}\nEvidence Text: {self.evidence_text}\nSentences: {self.sentences}\nWiki URL: {self.wiki_url}\nDoc Retrieval Method: {self.doc_retrieval_method}\nEntity: {self.entity}"
+        return f"Query: {self.query}\nDoc ID: {self.doc_id}\nDoc Score: {self.doc_score}\nEvidence Text: {self.evidence_text}\nSentences: {self.sentences}\nDoc Retrieval Method: {self.doc_retrieval_method}"
 
 class EvidenceWrapper:
     def __init__(self, query):
