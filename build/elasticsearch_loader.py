@@ -32,6 +32,10 @@ def main(batch_limit=None):
                 },
                 "content": {
                     "type": "text"
+                },
+                "embedding": {
+                    "type": "dense_vector",
+                    "dims": 768
                 }
             }
         }
@@ -63,7 +67,8 @@ def main(batch_limit=None):
                         "_index": "documents",
                         "_source": {
                             "doc_id": data['id'],
-                            "content": data['lines']
+                            "content": data['lines'],
+                            "content_type": "text"
                         }
                     }
                     actions.append(action)

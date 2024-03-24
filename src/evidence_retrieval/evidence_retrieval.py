@@ -113,8 +113,7 @@ class EvidenceRetriever:
         # Rescore documents by answerability
         for doc in tqdm(rerank_docs):
             id = doc['id']
-            response = self.es.get(index="documents", id=id)
-            text = response['_source']['content']
+            text = doc['text']
 
             doc_score = 0
             for question in questions:
@@ -137,10 +136,7 @@ class EvidenceRetriever:
                 docs.append(doc)
 
         # Retrieve the text of 30 documents from db
-        for id, doc_id, score, method in [(doc['id'], doc['doc_id'], doc['score'], doc['method']) for doc in docs]:
-            response = self.es.get(index="documents", id=id)
-            text = response['_source']['content']
-
+        for id, doc_id, score, method, text in [(doc['id'], doc['doc_id'], doc['score'], doc['method'], doc['text']) for doc in docs]:
             evidence = Evidence(query=query, evidence_text=text, doc_score=score, doc_id=doc_id, doc_retrieval_method=method)
             evidence_wrapper.add_evidence(evidence)
 

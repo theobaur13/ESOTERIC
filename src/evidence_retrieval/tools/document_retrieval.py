@@ -40,7 +40,8 @@ def title_match_search(queries, es):
     for hit in response['hits']['hits']:
         id = hit['_id']
         doc_id = hit['_source']['doc_id']
-        docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
+        text = hit['_source']['content']
+        docs.append({"id" : id, "doc_id" : doc_id, "entity" : query, "text" : text})
     return docs
 
 def text_match_search(claim, queries, es, encoder, limit=100, k_lim=10):
@@ -99,7 +100,8 @@ def text_match_search(claim, queries, es, encoder, limit=100, k_lim=10):
         doc_id = data['doc_id'][top_k[1][0][i]]
         score = top_k[0][0][i]
         id = data['id'][top_k[1][0][i]]
-        docs.append({"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match"})
+        text = data['text'][top_k[1][0][i]]
+        docs.append({"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match", "text" : text})
 
     # Return sorted list of documents by score
     docs = sorted(docs, key=lambda x: x['score'], reverse=True)
