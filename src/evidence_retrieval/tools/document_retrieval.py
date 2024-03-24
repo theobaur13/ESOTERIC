@@ -4,54 +4,76 @@ import torch
 from pandas import DataFrame as df
 
 # Retrieve documents with exact title match inc. docs with disambiguation in title
-def title_match_search(query, conn):
-    print("Searching for titles containing keyword '" + str(query) + "'")
+def title_match_search(queries, es):
+    print("Searching for titles containing keywords:", queries)
 
     # Convert query to lowercase and replace spaces with underscores
-    formatted_query = '"' + query.replace(' ', '_').replace(':', '-COLON-').lower() + '"'
-    full_query = f"doc_id:{formatted_query}"
+    formatted_queries = [query.replace(' ', '_').replace(':', '-COLON-').lower() for query in queries] 
 
-    # Retrieve documents from db
-    cursor = conn.cursor()
-    cursor.execute("""
-            SELECT documents.id, documents.doc_id, bm25(documents_fts) AS rank FROM documents
-            INNER JOIN documents_fts ON documents.doc_id = documents_fts.doc_id
-            WHERE documents_fts MATCH ? ORDER BY rank
-            """, (full_query,))
-    rows = cursor.fetchall()
+    should_conditions = []
+    for query in formatted_queries:
+        should_conditions.append({
+            "term": {
+                "doc_id": query
+            }
+        })
+        should_conditions.append({
+            "wildcard": {
+                "doc_id": {
+                    "value": f"{query}_-LRB-*"
+                }
+            }
+        })
+
+    query_body = {
+        "query": {
+            "bool": {
+                "should": should_conditions,
+                "minimum_should_match": 1
+            }
+        }
+    }
+
+    response = es.search(index="documents", body=query_body)
 
     docs = []
-    match_query = formatted_query.replace('"', '')
-    for row in rows:
-        id = row[0]
-        doc_id = row[1]
-        lower_doc_id = doc_id.lower()
-        if lower_doc_id == match_query or lower_doc_id.startswith(match_query + '_-lrb-') and lower_doc_id.endswith('-rrb-'):
-            if doc_id not in [d['doc_id'] for d in docs]:
-                docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
-
+    for hit in response['hits']['hits']:
+        id = hit['_id']
+        doc_id = hit['_source']['doc_id']
+        docs.append({"id" : id, "doc_id" : doc_id, "entity" : query})
     return docs
 
-def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
-    print("Searching for documents containing keyword '" + str(query) + "'")
-
-    # Convert query to lowercase
-    formatted_query = 'text:"' + query.lower().replace('"', '""') + '"'
+def text_match_search(claim, queries, es, encoder, limit=100, k_lim=10):
+    print("Searching for documents containing keywords:", queries)
 
     # Retrieve documents from db containing query
-    cursor = conn.cursor()
-    cursor.execute("""
-                SELECT documents.id, documents.doc_id, documents.text, bm25(documents_fts) AS rank FROM documents
-                INNER JOIN documents_fts ON documents.doc_id = documents_fts.doc_id
-                WHERE documents_fts MATCH ? ORDER BY rank LIMIT ?
-                """, (formatted_query, limit))
-    rows = cursor.fetchall()
+    query_body = {
+        "query": {
+            "bool": {
+                "should": [
+                    {"match_phrase": {"content": query}}
+                    for query in queries
+                ],
+                "minimum_should_match": 1
+            }
+        },
+        "size": limit
+    }
 
-    adjusted_rows = [row[:3] for row in rows]
+    response = es.search(index="documents", body=query_body)
+    rows = response['hits']['hits']
 
     # Return empty list if no documents found
     if len(rows) == 0:
         return []
+    
+    # Adjust rows to include id and doc_id
+    adjusted_rows = []
+    for row in rows:
+        id = row['_id']
+        doc_id = row['_source']['doc_id']
+        text = row['_source']['content']
+        adjusted_rows.append([id, doc_id, text])
 
     # Convert rows to dataframe [id][doc_id][text]
     data = df(adjusted_rows, columns=['id', 'doc_id', 'text'])
@@ -76,8 +98,8 @@ def text_match_search(claim, query, conn, encoder, limit=100, k_lim=10):
     for i in range(k):
         doc_id = data['doc_id'][top_k[1][0][i]]
         score = top_k[0][0][i]
-        id = int(data['id'][top_k[1][0][i]])
-        docs.append({"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match", "entity" : query})
+        id = data['id'][top_k[1][0][i]]
+        docs.append({"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match"})
 
     # Return sorted list of documents by score
     docs = sorted(docs, key=lambda x: x['score'], reverse=True)

@@ -14,7 +14,7 @@ def extract_entities(answer_pipe, NER_pipe, text):
     # Extract entities from text through NER
     NER_results = NER_pipe(text)
     for entity in NER_results:
-        entity_string = entity['word']
+        entity_string = str(entity['word'])
 
         # For entities with a hyphen, remove spaces around hyphen, e.g. "Spider - man" -> "Spider-man"
         if "-" in entity_string:
