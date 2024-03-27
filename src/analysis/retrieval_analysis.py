@@ -21,20 +21,36 @@ def initialiser(database_path, preloaded_claim=None):
             GROUP BY c.claim_id
         ''', (preloaded_claim,))
     else:
-        cursor.execute('''
-            SELECT c.claim, GROUP_CONCAT(cd.doc_id || ':' || cd.sent_id, ';') AS doc_sent_pairs
-            FROM claims c
-            JOIN claim_docs cd ON c.claim_id = cd.claim_id
-            GROUP BY c.claim_id
-            ORDER BY RANDOM()
-        ''')
+        difficult_subset = input("Would you like to test the difficult subset of claims? (y/n)\n")
+        if difficult_subset == "y":
+            cursor.execute(''' 
+                SELECT c.claim, GROUP_CONCAT(cd.doc_id || ':' || cd.sent_id, ';') AS doc_sent_pairs
+                FROM claims c
+                JOIN claim_docs cd ON c.claim_id = cd.claim_id
+                WHERE c.claim_id IN (
+                    SELECT cd.claim_id
+                    FROM claim_docs cd
+                    GROUP BY cd.claim_id
+                    HAVING COUNT(DISTINCT cd.doc_id) > 1
+                )
+                GROUP BY c.claim_id
+                ORDER BY RANDOM()
+            ''')
+        elif difficult_subset == "n":
+            cursor.execute('''
+                SELECT c.claim, GROUP_CONCAT(cd.doc_id || ':' || cd.sent_id, ';') AS doc_sent_pairs
+                FROM claims c
+                JOIN claim_docs cd ON c.claim_id = cd.claim_id
+                GROUP BY c.claim_id
+                ORDER BY RANDOM()
+            ''')
 
     # Initialise evidence retriever
     title_match_docs_limit = 1000
     text_match_search_db_limit = 1000
 
     title_match_search_threshold = 0
-    answerability_threshold = 0.01
+    answerability_threshold = 0.65
     
     evidence_retriever = EvidenceRetriever(database_path, title_match_docs_limit=title_match_docs_limit, text_match_search_db_limit=text_match_search_db_limit, title_match_search_threshold=title_match_search_threshold, answerability_threshold=answerability_threshold)
 

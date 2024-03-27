@@ -1,11 +1,9 @@
 import os
 import re
 import spacy
-import sentence_transformers
 from haystack import Document
 from haystack.document_stores import InMemoryDocumentStore
 from haystack.nodes import DensePassageRetriever
-from tqdm import tqdm
 from transformers import pipeline, DistilBertForSequenceClassification, AutoTokenizer
 from models import Evidence, EvidenceWrapper, Sentence
 from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_focals, extract_questions, calculate_answerability_score_SelfCheckGPT, calculate_answerability_score_tiny, extract_answers, extract_questions, extract_polar_questions
@@ -51,45 +49,38 @@ class EvidenceRetriever:
         return evidence
 
     def retrieve_documents(self, claim):
-        print("Starting document retrieval for query: '" + str(claim) + "'")
-        evidence_wrapper = EvidenceWrapper(claim)
+        print("Starting document retrieval for claim: '" + str(claim) + "'")
 
-        print("Extracting entities from text")
+        # Extract entities from claim
+        print("Extracting entities from claim")
         entities = extract_entities(self.answer_extraction_pipe, self.NER_model, claim)
         print("Entities:", entities)
 
-        # Retrieve documents with exact title match inc. docs with disambiguation in title
+        # Retrieve documents with exact title match inc. docs with disambiguation in title and score them
         title_match_docs = title_match_search(entities, self.es)
-
-        # Rerank documents:
-        # score = 1 for exact match
-        # score = cosine_similarity(info, query) for disambiguated docs
         title_match_docs = score_docs(title_match_docs, claim, self.nlp)
-    
+
         # Split docs into title matched and disambiguated docs
         exact_title_matched_docs = [doc for doc in title_match_docs if doc['method'] == "title_match"]
         disambiguated_docs = [doc for doc in title_match_docs if doc['method'] == "disambiguation"]
 
-        # Sort title matched docs by score and take top 20
+        # Sort title matched docs by score, taking top N docs or docs above a certain threshold
         disambiguated_docs = sorted(disambiguated_docs, key=lambda x: x['score'], reverse=True)[:self.title_match_docs_limit]
-
-        # Apply threshold to title matched docs
         disambiguated_docs = [doc for doc in disambiguated_docs if doc['score'] > self.title_match_search_threshold]
 
         # Retrieve X documents where entity is mentioned in the text
         textually_matched_docs = text_match_search(entities, self.es, self.text_match_search_db_limit)
 
-        # Generate questions for each focal point in the query
+        # Generate questions for each answer in the query
         claim_answers = extract_answers(self.answer_extraction_pipe, claim)
         print("Claim answers:", claim_answers)
-
         questions = []
         for answer in claim_answers:
             question = extract_questions(self.question_generation_pipe, answer['focal'], claim)
             questions.append(question)
             print("Question for focal point '" + answer['focal'] + "':", question)
 
-        # Manually add polar questions for each focal point
+        # Manually generate polar questions (yes/no questions)
         polar_questions = extract_polar_questions(self.nlp, self.question_generation_pipe, claim)
         for polar_question in polar_questions:
             questions.append(polar_question)
@@ -110,6 +101,7 @@ class EvidenceRetriever:
                 doc = Document(id=id, doc_id=doc_id, content=content, content_type=content_type, embedding=embedding, meta=meta)
                 doc_store.write_documents([doc])
 
+        # Initialise retriever
         retriever = DensePassageRetriever(
             document_store=doc_store,
             query_embedding_model="facebook/dpr-question_encoder-single-nq-base",
@@ -124,6 +116,7 @@ class EvidenceRetriever:
         for doc in exact_title_matched_docs:
             return_docs.append(doc)
 
+        # Retrieve docs for each question keeping the highest scoring docs
         for question in questions:
             results = retriever.retrieve(query=question)
             for result in results:
@@ -137,6 +130,8 @@ class EvidenceRetriever:
                                 doc['score'] = score
                                 return_docs.append(doc)
 
+        # Add evidence to evidence wrapper
+        evidence_wrapper = EvidenceWrapper(claim)
         for id, doc_id, score, method, text in [(doc['id'], doc['doc_id'], doc['score'], doc['method'], doc['text']) for doc in return_docs]:
             evidence = Evidence(query=claim, evidence_text=text, doc_score=score, doc_id=doc_id, doc_retrieval_method=method)
             evidence_wrapper.add_evidence(evidence)

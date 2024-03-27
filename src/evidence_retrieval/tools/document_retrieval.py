@@ -1,7 +1,5 @@
-import faiss
 import re
 import torch
-from pandas import DataFrame as df
 
 # Retrieve documents with exact title match inc. docs with disambiguation in title
 def title_match_search(queries, es):
@@ -42,7 +40,7 @@ def title_match_search(queries, es):
         doc_id = hit['_source']['doc_id']
         text = hit['_source']['content']
         embedding = hit['_source']['embedding']
-        docs.append({"id" : id, "doc_id" : doc_id, "entity" : query, "text" : text, "embedding" : embedding})
+        docs.append({"id" : id, "doc_id" : doc_id, "entity" : [query for query in queries if queries], "text" : text, "embedding" : embedding})
     return docs
 
 

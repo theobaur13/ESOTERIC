@@ -23,7 +23,7 @@ def main():
 
     # Specify score threshold parameters
     title_match_search_threshold = 0
-    answerability_threshold = 0.01
+    answerability_threshold = 0.65
 
     # Retrieve evidence
     evidence_retriever = EvidenceRetriever(data_path, title_match_docs_limit=title_match_docs_limit, text_match_search_db_limit=text_match_search_db_limit, title_match_search_threshold=title_match_search_threshold, answerability_threshold=answerability_threshold)
