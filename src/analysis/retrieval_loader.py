@@ -50,12 +50,21 @@ def retrieval_loader():
                 for line in tqdm(f):
                     data = json.loads(line)
                     if data["label"] == "SUPPORTS" or data["label"] == "REFUTES":
-                        cursor.execute("INSERT INTO claims (claim_id, claim) VALUES (?, ?)", (data["id"], data["claim"]))
-
+                        # if all docs can be found in documents table
+                        docs_exist = True
                         for set in data["evidence"]:
                             for doc in set:
-                                try:
-                                    cursor.execute("INSERT INTO claim_docs (claim_id, doc_id, sent_id) VALUES (?, ?, ?)", (data["id"], doc[2], doc[3]))
-                                except sqlite3.IntegrityError:
-                                    pass
+                                cursor.execute("SELECT * FROM documents WHERE doc_id = ?", (doc[2],))
+                                if cursor.fetchone() is None:
+                                    docs_exist = False
+                                    break
+
+                        if docs_exist:
+                            cursor.execute("INSERT INTO claims (claim_id, claim) VALUES (?, ?)", (data["id"], data["claim"]))
+                            for set in data["evidence"]:
+                                for doc in set:
+                                    try:
+                                        cursor.execute("INSERT INTO claim_docs (claim_id, doc_id, sent_id) VALUES (?, ?, ?)", (data["id"], doc[2], doc[3]))
+                                    except sqlite3.IntegrityError:
+                                        pass
     conn.commit()

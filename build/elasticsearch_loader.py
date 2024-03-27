@@ -4,14 +4,16 @@ import json
 from tqdm import tqdm
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import BulkIndexError
+from dotenv import load_dotenv
 
 def main(batch_limit=None):
+    load_dotenv()
     current_dir = os.path.dirname(os.path.abspath(__file__))
     dataset_path = os.path.join(current_dir, '..', 'data', 'wiki-pages')
 
     # Initialize the Elasticsearch document store
     print("Initializing Elasticsearch document store")
-    document_store = Elasticsearch(hosts=["http://localhost:9200"], basic_auth=("elastic", "password"))
+    document_store = Elasticsearch(hosts=[os.environ.get("ES_HOST_URL")], basic_auth=(os.environ.get("ES_USER"), os.environ.get("ES_PASS")))
 
     custom_mapping = {
         "settings": {
