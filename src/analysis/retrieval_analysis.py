@@ -21,6 +21,7 @@ def initialiser(database_path, preloaded_claim=None):
             GROUP BY c.claim_id
         ''', (preloaded_claim,))
     else:
+        batch_limit = int(input("Enter index of maximum wiki-pages to load (default is all): "))
         difficult_subset = input("Would you like to test the difficult subset of claims? (y/n)\n")
         if difficult_subset == "y":
             cursor.execute(''' 
@@ -28,22 +29,25 @@ def initialiser(database_path, preloaded_claim=None):
                 FROM claims c
                 JOIN claim_docs cd ON c.claim_id = cd.claim_id
                 WHERE c.claim_id IN (
-                    SELECT cd.claim_id
-                    FROM claim_docs cd
-                    GROUP BY cd.claim_id
-                    HAVING COUNT(DISTINCT cd.doc_id) > 1
+                    SELECT cd2.claim_id
+                    FROM claim_docs cd2
+                    WHERE cd2.doc_no BETWEEN 1 AND ?
+                    GROUP BY cd2.claim_id
+                    HAVING COUNT(DISTINCT cd2.doc_id) > 1
                 )
+                AND cd.doc_no BETWEEN 1 AND ?
                 GROUP BY c.claim_id
                 ORDER BY RANDOM()
-            ''')
+            ''' , (batch_limit, batch_limit))
         elif difficult_subset == "n":
             cursor.execute('''
                 SELECT c.claim, GROUP_CONCAT(cd.doc_id || ':' || cd.sent_id, ';') AS doc_sent_pairs
                 FROM claims c
                 JOIN claim_docs cd ON c.claim_id = cd.claim_id
+                                AND cd.doc_no BETWEEN 1 AND ?
                 GROUP BY c.claim_id
                 ORDER BY RANDOM()
-            ''')
+            ''', (batch_limit,))
 
     # Initialise evidence retriever
     title_match_docs_limit = 1000

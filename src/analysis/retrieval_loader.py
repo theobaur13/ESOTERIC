@@ -27,6 +27,7 @@ def retrieval_loader():
             claim_id INTEGER NOT NULL,
             doc_id INTEGER NOT NULL,
             sent_id INTEGER NOT NULL,
+            doc_no INTEGER DEFAULT 0,
             FOREIGN KEY (claim_id) REFERENCES claims (claim_id),
             FOREIGN KEY (doc_id) REFERENCES documents (doc_id),
             PRIMARY KEY (claim_id, doc_id, sent_id)
@@ -35,8 +36,8 @@ def retrieval_loader():
 
     # Create indexes
     cursor.execute("CREATE INDEX IF NOT EXISTS claim_id_index ON claims (claim_id);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS claim_id_index ON claim_docs (claim_id);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS doc_id_index ON claim_docs (doc_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS claim_docs_claim_id_index ON claim_docs (claim_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS claim_docs_doc_id_index ON claim_docs (doc_id);")
 
     # Load data into database
     file_list = os.listdir(dataset_path)
@@ -50,21 +51,16 @@ def retrieval_loader():
                 for line in tqdm(f):
                     data = json.loads(line)
                     if data["label"] == "SUPPORTS" or data["label"] == "REFUTES":
-                        # if all docs can be found in documents table
-                        docs_exist = True
+                        cursor.execute("INSERT INTO claims (claim_id, claim) VALUES (?, ?)", (data["id"], data["claim"]))
                         for set in data["evidence"]:
                             for doc in set:
-                                cursor.execute("SELECT * FROM documents WHERE doc_id = ?", (doc[2],))
-                                if cursor.fetchone() is None:
-                                    docs_exist = False
-                                    break
-
-                        if docs_exist:
-                            cursor.execute("INSERT INTO claims (claim_id, claim) VALUES (?, ?)", (data["id"], data["claim"]))
-                            for set in data["evidence"]:
-                                for doc in set:
-                                    try:
-                                        cursor.execute("INSERT INTO claim_docs (claim_id, doc_id, sent_id) VALUES (?, ?, ?)", (data["id"], doc[2], doc[3]))
-                                    except sqlite3.IntegrityError:
-                                        pass
+                                try:
+                                    # get doc_no from documents table
+                                    cursor.execute("SELECT file_no FROM documents WHERE doc_id = ?", (doc[2],))
+                                    results = cursor.fetchone()
+                                    if results:
+                                        doc_no = results[0]
+                                    cursor.execute("INSERT INTO claim_docs (claim_id, doc_id, sent_id, doc_no) VALUES (?, ?, ?, ?)", (data["id"], doc[2], doc[3], doc_no))
+                                except sqlite3.IntegrityError:
+                                    pass
     conn.commit()

@@ -25,7 +25,8 @@ def main(batch_limit=None):
         CREATE TABLE IF NOT EXISTS documents(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         doc_id TEXT NOT NULL,
-        text TEXT NOT NULL);
+        text TEXT NOT NULL,
+        file_no INTEGER DEFAULT 0);
         ''')
 
     # Create index on id and doc_id
@@ -34,26 +35,26 @@ def main(batch_limit=None):
 
     # Create virtual table for full text search
     cursor.execute("CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING FTS5(doc_id, text);")
-
-    # import jsonl file by file into the db
-    print("Loading " + str(batch_limit) + " documents into database")
-    file_list = os.listdir(dataset_path)
     
     # Limit the number of files processed from command line arg
+    file_list = os.listdir(dataset_path)
     if batch_limit:
         file_list = file_list[:batch_limit]
-    
+
+    print("Loading " + str(len(file_list)) + " files into database")
+
     # Load data into database file by file
     for file in tqdm(file_list):
         file_path = os.path.join(dataset_path, file)
+        file_no = int(file.split('-')[1].split('.')[0])
 
         # Load data from jsonl files
         if file_path.endswith('.jsonl'):
             with open(file_path) as f:
                 for line in f:
                     data = json.loads(line)
-                    cursor.execute("INSERT INTO documents (doc_id, text) VALUES (?, ?)", (data['id'], data['lines']))
-                    cursor.execute("INSERT INTO documents_fts (doc_id, text) VALUES (?, ?)", (data['id'], data['lines']))
+                    cursor.execute("INSERT INTO documents (doc_id, text, file_no) VALUES (?, ?, ?)", (data['id'], data['lines'], file_no))
+                    # cursor.execute("INSERT INTO documents_fts (doc_id, text) VALUES (?, ?)", (data['id'], data['lines']))
         else:
             raise ValueError('Unsupported file format')
     conn.commit()
