@@ -7,7 +7,7 @@ from elasticsearch.helpers import BulkIndexError
 from dotenv import load_dotenv
 
 def main(batch_limit=None):
-    load_dotenv()
+    load_dotenv(override=True)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     dataset_path = os.path.join(current_dir, '..', 'data', 'wiki-pages')
 

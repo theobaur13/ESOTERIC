@@ -115,23 +115,6 @@ def score_docs(docs, query, nlp):
     docs = docs + disambiguated_docs
     return docs
 
-def extract_focals(nlp, text):
-    print("Extracting focal points from text")
-    doc = nlp(text)
-
-    tag_set = {
-        "all": ["PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE", "DATE", "TIME", "PERCENT", "MONEY", "QUANTITY", "ORDINAL", "CARDINAL"],
-    }
-
-    active_tag_set = tag_set["all"]
-    focals = []
-
-    for entity in doc.ents:
-        if entity.label_ in active_tag_set:
-            focals.append({'focal': entity.text, 'type': entity.label_})
-
-    return focals
-
 def extract_answers(pipe, context):
     input = "extract answers: <ha> " + context + " <ha>"
     output = pipe(input)
@@ -187,18 +170,3 @@ def extract_polar_questions(nlp, pipe, claim):
         questions.append(question)
 
     return questions
-
-def calculate_answerability_score_SelfCheckGPT(tokeniser, model, context, question):
-    input_string = question + " " + tokeniser.sep_token + " " + context
-    encoded_input = tokeniser(input_string, return_tensors="pt", truncation=True)
-    prob = torch.sigmoid(model(**encoded_input).logits.squeeze(-1)).item()
-    return prob
-
-def calculate_answerability_score_tiny(nlp, context, question):
-    input = {
-        'question': question,
-        'context': context
-    }
-    output = nlp(input)
-    score = output['score']
-    return score

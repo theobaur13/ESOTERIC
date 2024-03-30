@@ -8,8 +8,8 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, Trainer, TrainingArguments
 
-def create_dataset(database_path, output_dir, limit=10000, x=2, y=2):
-    ouput_file = os.path.join(output_dir, 'relevancy_classification.json')
+def create_relevancy_dataset(database_path, output_dir, limit=10000, x=2, y=2):
+    ouput_file = os.path.join(output_dir, 'relevancy_classification_' + str(limit) + '.json')
 
     conn = sqlite3.connect(database_path)
     cursor = conn.cursor()
@@ -126,7 +126,7 @@ def create_dataset(database_path, output_dir, limit=10000, x=2, y=2):
     with open(ouput_file, 'w') as f:
         json.dump(dataset, f, indent=4)
 
-def train_model(dataset_file, model_name, output_dir):
+def train_relevancy_model(dataset_file, model_name, output_dir):
     with open(dataset_file) as f:
         dataset = json.load(f)
         print("Dataset loaded successfully")
@@ -209,7 +209,7 @@ def train_model(dataset_file, model_name, output_dir):
     print("Model and tokenizer saved successfully")
     return model, tokenizer
 
-def evaluate_model(dataset_file, model_name):
+def evaluate_relevancy_model(dataset_file, model_name):
     with open(dataset_file) as f:
         dataset = json.load(f)
         print("Dataset loaded successfully")

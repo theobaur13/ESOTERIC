@@ -26,4 +26,8 @@ retriever = DensePassageRetriever(
 )
 
 # Load the document store
-document_store.update_embeddings(retriever=retriever)
+document_store.update_embeddings(
+    retriever=retriever,
+    index="documents",
+    update_existing_embeddings=False
+)

@@ -1,23 +1,25 @@
 import os
-import re
 import spacy
-from haystack import Document
-from haystack.document_stores import InMemoryDocumentStore
+from haystack import Answer
 from haystack.nodes import DensePassageRetriever
-from transformers import pipeline, DistilBertForSequenceClassification, AutoTokenizer
+from haystack.nodes import FARMReader
+from transformers import pipeline
 from models import Evidence, EvidenceWrapper, Sentence
-from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_focals, extract_questions, calculate_answerability_score_SelfCheckGPT, calculate_answerability_score_tiny, extract_answers, extract_questions, extract_polar_questions
+from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_questions, extract_answers, extract_questions, extract_polar_questions
 from evidence_retrieval.tools.NER import extract_entities
+from evidence_retrieval.tools.docstore_conversion import listdict_to_docstore, wrapper_to_docstore
 from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 class EvidenceRetriever:
-    def __init__(self, data_path, title_match_docs_limit=20, title_match_search_threshold=0, answerability_threshold=0.5, answerability_docs_limit=20, text_match_search_db_limit=1000):
+    def __init__(self, title_match_docs_limit=20, title_match_search_threshold=0, answerability_threshold=0.65, answerability_docs_limit=20, text_match_search_db_limit=1000, reader_threshold=0.7 ,questions=[]):
         print ("Initialising evidence retriever")
+
+        self.questions = questions
 
         # Setup db connection and NLP models
         load_dotenv()
-        self.data_path = data_path
         self.es = Elasticsearch(hosts=[os.environ.get("ES_HOST_URL")], basic_auth=(os.environ.get("ES_USER"), os.environ.get("ES_PASS")))
 
         # Set limits and cutoffs for document retrieval
@@ -27,6 +29,7 @@ class EvidenceRetriever:
 
         self.title_match_search_threshold = title_match_search_threshold
         self.answerability_threshold = answerability_threshold
+        self.reader_threshold = reader_threshold
 
         # Setup NLP models for document retrieval
         print("Initialising NLP models")
@@ -34,18 +37,12 @@ class EvidenceRetriever:
         self.NER_model = pipeline("token-classification", model="Babelscape/wikineural-multilingual-ner", grouped_entities=True)
         self.question_generation_pipe = pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-question-generation-ap", max_length=256)
         self.answer_extraction_pipe = pipeline("text2text-generation", model="vabatista/t5-small-answer-extraction-en")
-
-        # Setup relevance classification model
-        relevance_classification_model_dir = os.path.join(self.data_path, '..', 'models', 'relevancy_classification')
-        relevance_classification_model = DistilBertForSequenceClassification.from_pretrained(relevance_classification_model_dir)
-        relevance_classification_tokenizer = AutoTokenizer.from_pretrained(relevance_classification_model_dir)
-        self.relevance_classification_tokenizer_pipe = pipeline('text-classification', model=relevance_classification_model, tokenizer=relevance_classification_tokenizer)
         print("Evidence retriever initialised")
 
     def retrieve_evidence(self, claim):
         # Retrieve evidence for a given query
         evidence = self.retrieve_documents(claim)
-        # evidence = self.retrieve_passages(evidence)
+        evidence = self.retrieve_passages(evidence)
         return evidence
 
     def retrieve_documents(self, claim):
@@ -74,32 +71,20 @@ class EvidenceRetriever:
         # Generate questions for each answer in the query
         claim_answers = extract_answers(self.answer_extraction_pipe, claim)
         print("Claim answers:", claim_answers)
-        questions = []
+        # questions = []
         for answer in claim_answers:
             question = extract_questions(self.question_generation_pipe, answer['focal'], claim)
-            questions.append(question)
-            print("Question for focal point '" + answer['focal'] + "':", question)
+            self.questions.append(question)
+            print("Question for answer '" + answer['focal'] + "':", question)
 
         # Manually generate polar questions (yes/no questions)
         polar_questions = extract_polar_questions(self.nlp, self.question_generation_pipe, claim)
         for polar_question in polar_questions:
-            questions.append(polar_question)
+            self.questions.append(polar_question)
             print("Polar question:", polar_question)
 
         # For doc in both disambiguated and textually matched docs, add to doc store
-        doc_store = InMemoryDocumentStore()
-        for doc in disambiguated_docs + textually_matched_docs:
-            id = doc['id']
-            doc_id = doc['doc_id']
-            content = doc['text']
-            content_type = "text"
-            embedding = doc['embedding']
-            meta = {"doc_id": doc_id}
-            
-            # if not already in doc store, add to doc store
-            if id not in [d.id for d in doc_store.get_all_documents()]:
-                doc = Document(id=id, doc_id=doc_id, content=content, content_type=content_type, embedding=embedding, meta=meta)
-                doc_store.write_documents([doc])
+        doc_store = listdict_to_docstore(disambiguated_docs + textually_matched_docs)
 
         # Initialise retriever
         retriever = DensePassageRetriever(
@@ -117,7 +102,8 @@ class EvidenceRetriever:
             return_docs.append(doc)
 
         # Retrieve docs for each question keeping the highest scoring docs
-        for question in questions:
+        print("Retrieving documents for each question")
+        for question in tqdm(self.questions):
             results = retriever.retrieve(query=question)
             for result in results:
                 id = result.id
@@ -132,32 +118,31 @@ class EvidenceRetriever:
 
         # Add evidence to evidence wrapper
         evidence_wrapper = EvidenceWrapper(claim)
-        for id, doc_id, score, method, text in [(doc['id'], doc['doc_id'], doc['score'], doc['method'], doc['text']) for doc in return_docs]:
-            evidence = Evidence(query=claim, evidence_text=text, doc_score=score, doc_id=doc_id, doc_retrieval_method=method)
+        for id, doc_id, score, method, text, embedding in [(doc['id'], doc['doc_id'], doc['score'], doc['method'], doc['text'], doc['embedding']) for doc in return_docs]:
+            evidence = Evidence(query=claim, evidence_text=text, id=id, doc_score=score, doc_id=doc_id, doc_retrieval_method=method, embedding=embedding)
             evidence_wrapper.add_evidence(evidence)
 
         return evidence_wrapper
 
     def retrieve_passages(self, evidence_wrapper):
-        base_claim = evidence_wrapper.get_claim()
-        evidences = evidence_wrapper.get_evidences()
-        for evidence in evidences:
-            text = evidence.evidence_text
+        doc_store = wrapper_to_docstore(evidence_wrapper)
 
-            pattern = r'\n\d+\t'
-            sentences = re.split(pattern, text)
-            sentences = [sentence for sentence in sentences if sentence != ""]
+        # Initialise reader
+        reader = FARMReader(model_name_or_path="deepset/tinyroberta-squad2", use_gpu=False)
 
-            evidence_sentences = []
-            for sentence in sentences:
-                sent_id = sentences.index(sentence)
-                input_pair = f"{base_claim} [SEP] {sentence}"
-                result = self.relevance_classification_tokenizer_pipe(input_pair)
-                label = result[0]['label']
-                relevance_score = result[0]['score']
-                if label == "LABEL_1":
-                    evidence_sentence = Sentence(sentence=sentence, score=relevance_score, doc_id=evidence.doc_id, sent_id=sent_id)
-                    evidence_sentences.append(evidence_sentence)
+        # Retrieve passages for each question
+        for question in self.questions:
+            print("Retrieving passages for question:", question)
+            results = reader.predict(query=question, documents=doc_store, top_k=30)
 
-            evidence.set_evidence_sentences(evidence_sentences)
+            for answer in results['answers']:
+                passage = answer.context
+                score = answer.score
+                id = answer.document_ids[0]
+
+                if score > self.reader_threshold:
+                    evidence = evidence_wrapper.get_evidence_by_id(id)
+                    if evidence:
+                        sentence = Sentence(sentence=passage, score=score, doc_id=evidence.doc_id)
+                        evidence.add_sentence(sentence)
         return evidence_wrapper
