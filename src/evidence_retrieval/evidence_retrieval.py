@@ -128,7 +128,11 @@ class EvidenceRetriever:
         doc_store = wrapper_to_docstore(evidence_wrapper)
 
         # Initialise reader
-        reader = FARMReader(model_name_or_path="deepset/tinyroberta-squad2", use_gpu=False)
+        reader = FARMReader(
+            model_name_or_path="deepset/tinyroberta-squad2",
+            use_gpu=False,
+            context_window_size=250,
+            )
 
         # Retrieve passages for each question
         for question in self.questions:
@@ -143,6 +147,11 @@ class EvidenceRetriever:
                 if score > self.reader_threshold:
                     evidence = evidence_wrapper.get_evidence_by_id(id)
                     if evidence:
-                        sentence = Sentence(sentence=passage, score=score, doc_id=evidence.doc_id)
+                        sentence = Sentence(sentence=passage, score=score, doc_id=evidence.doc_id, question=question)
+                        sentence.set_start_end(evidence.evidence_text)
                         evidence.add_sentence(sentence)
         return evidence_wrapper
+    
+    def flush_questions(self):
+        self.questions = []
+        print("Questions flushed")

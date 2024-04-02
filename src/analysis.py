@@ -3,7 +3,6 @@ import json
 import logging
 import warnings
 from transformers.utils import logging as transformers_logging
-from analysis.retrieval_loader import retrieval_loader
 from analysis.retrieval_analysis import skeleton
 from analysis.score_analysis import text_match_scoring, disambig_scoring
 from analysis.score_plotter import plot_text_match_scores, plot_hit_position, plot_hit_relative_position
@@ -23,7 +22,7 @@ def load_data(output_dir, file_name):
     return data
 
 def handle_input():
-    operation = input("Would you like to load claims into the database, run system, or analyse results?\n(l) Load, (r) Run, (a) Analyse\n")
+    operation = input("Would you like to run system or analyse results?\n(r) Run, (a) Analyse\n")
     return operation.lower()
 
 def main():
@@ -31,18 +30,12 @@ def main():
     output_dir = os.path.join(current_dir, '..', 'data', 'analysis')
 
     operation = handle_input()
-    if operation == "l":
-        retrieval_loader()
-    else:
-        handle_analysis(operation, current_dir, output_dir)
-
-def handle_analysis(operation, current_dir, output_dir):
     if operation == "r":
         run_analysis(current_dir, output_dir)
     elif operation == "a":
         analyse_results(current_dir)
     else:
-        print("Invalid input. Please enter 'l' or 'a'.")
+        print("Invalid input. Please enter 'r' or 'a'.")
 
 def run_analysis(current_dir, output_dir):
     database_path = os.path.join(current_dir, '..', 'data')

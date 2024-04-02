@@ -56,11 +56,17 @@ class EvidenceWrapper:
             return f"Query: {self.query}\nEvidences: {self.evidences}"
 
 class Sentence:
-    def __init__(self, sentence=None, score=0, doc_id=None, sent_id=None):
+    def __init__(self, sentence=None, score=0, doc_id=None, start=None, end=None, question=None):
         self.doc_id = doc_id
-        self.sent_id = sent_id
         self.sentence = sentence
         self.score = score
+        self.start = start
+        self.end = end
+        self.question = question
+
+    def set_start_end(self, text):
+        self.start = text.find(self.sentence)
+        self.end = self.start + len(self.sentence)
 
     def __str__(self):
         return f"Doc ID: {self.doc_id}\nSentence ID: {self.sent_id}\nSentence: {self.sentence}\nScore: {self.score}"

@@ -1,10 +1,40 @@
 import os
 import argparse
 import json
+import unicodedata
+import re
 from tqdm import tqdm
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import BulkIndexError
 from dotenv import load_dotenv
+
+### TODO: Migrate the following functions to a separate file and import them here
+def unicode_normalize(text):
+    """Resolve different type of unicode encodings."""
+    return unicodedata.normalize('NFD', text)
+
+def convert_brc(string):
+    string = re.sub('-LRB-', '(', string)
+    string = re.sub('-RRB-', ')', string)
+    string = re.sub('-LSB-', '[', string)
+    string = re.sub('-RSB-', ']', string)
+    string = re.sub('-LCB-', '{', string)
+    string = re.sub('-RCB-', '}', string)
+    string = re.sub('-COLON-', ':', string)
+    return string
+
+def reformat_punct(text):
+    # Remove spaces before and after punctuation
+    text = re.sub(r'\s([.,!?;:"](?:\s|$))', r'\1', text)
+    return text
+
+def normalize_text(text):
+    normalized_text = unicode_normalize(text)
+    converted_text = convert_brc(normalized_text)
+    converted_text = reformat_punct(converted_text)
+    return converted_text
+
+### End of functions to migrate
 
 def main(batch_limit=None):
     load_dotenv(override=True)
@@ -65,11 +95,13 @@ def main(batch_limit=None):
                 actions = []
                 for json_line in file:
                     data = json.loads(json_line)
+                    pure_text = data["text"]
+                    formatted_text = normalize_text(pure_text)
                     action = {
                         "_index": "documents",
                         "_source": {
                             "doc_id": data['id'],
-                            "content": data['lines'],
+                            "content": formatted_text,
                             "content_type": "text"
                         }
                     }

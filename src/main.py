@@ -37,9 +37,9 @@ def main():
             # print("Evidence Document:\n", evidence.evidence_text)
             print("Document Score:", str(evidence.doc_score))
             for sentence in evidence.sentences:
-                print("ID:", sentence.sent_id)
-                print("Sentence:", sentence.sentence)
-                print("Sentence Score:", sentence.score)
+                print("\tStart:", sentence.start, "End:", sentence.end)
+                print("\tSentence:", sentence.sentence)
+                print("\tSentence Score:", sentence.score)
 
         repeat = input("Would you like to enter another claim? (y/n): ").lower() == "y"
 
