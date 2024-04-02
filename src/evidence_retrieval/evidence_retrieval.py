@@ -11,6 +11,8 @@ from evidence_retrieval.tools.docstore_conversion import listdict_to_docstore, w
 from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 from tqdm import tqdm
+from rank_bm25 import BM25Okapi
+import re
 
 class EvidenceRetriever:
     def __init__(self, title_match_docs_limit=20, title_match_search_threshold=0, answerability_threshold=0.65, answerability_docs_limit=20, text_match_search_db_limit=1000, reader_threshold=0.7 ,questions=[]):
@@ -125,6 +127,55 @@ class EvidenceRetriever:
         return evidence_wrapper
 
     def retrieve_passages(self, evidence_wrapper):
+        # Retrieve passages using BM25 between the claim and evidence sentences
+        print("Retrieving passages using BM25")
+        claim = evidence_wrapper.get_claim()
+        evidence_texts = [{"doc_id": evidence.doc_id, "text": evidence.evidence_text} for evidence in evidence_wrapper.get_evidences()]
+
+        # Prepare evidence sentences and mappings
+        evidence_sentences = []
+        original_sentences = []
+        sent_doc_ids_map = {}
+
+        # Clean the claim
+        cleaned_claim = [token.text for token in self.nlp(claim) if not token.is_stop and not token.is_punct]
+
+        # Process documents
+        print("Processing documents")
+        for doc in evidence_texts:
+            for sent in self.nlp(doc["text"]).sents:
+                original_sentences.append(sent.text)
+
+                # Tokenize and clean
+                cleaned = [token.text for token in sent if not token.is_stop and not token.is_punct]
+                evidence_sentences.append(cleaned)
+                sent_doc_ids_map[" ".join(cleaned)] = (doc["doc_id"], sent.text)
+
+        # Create BM25 object and score sentences
+        print("Scoring sentences")
+        bm25 = BM25Okapi(evidence_sentences)
+        scores = bm25.get_scores(cleaned_claim)
+
+        # Prepare ranked sentences with original text
+        ranked_sentences = sorted([(evidence_sentences[i], scores[i], original_sentences[i]) for i in range(len(evidence_sentences))], key=lambda x: x[1], reverse=True)
+
+        # Only keep sentences with a score above 0
+        ranked_sentences = [sentence for sentence in ranked_sentences if sentence[1] > 0]
+
+        # Only keep the top N sentences
+        N = 5
+        ranked_sentences = ranked_sentences[:N]
+
+        # Add sentences to evidence
+        for cleaned, score, original in ranked_sentences:
+            doc_id, original_text = sent_doc_ids_map[" ".join(cleaned)]
+            for evidence in evidence_wrapper.get_evidences():
+                if evidence.doc_id == doc_id:
+                    sentence = Sentence(sentence=original, score=score, doc_id=doc_id, method="BM25")
+                    sentence.set_start_end(evidence.evidence_text)
+                    evidence.add_sentence(sentence)
+
+        # Retrieve passages using the FARM reader
         doc_store = wrapper_to_docstore(evidence_wrapper)
 
         # Initialise reader
@@ -147,7 +198,7 @@ class EvidenceRetriever:
                 if score > self.reader_threshold:
                     evidence = evidence_wrapper.get_evidence_by_id(id)
                     if evidence:
-                        sentence = Sentence(sentence=passage, score=score, doc_id=evidence.doc_id, question=question)
+                        sentence = Sentence(sentence=passage, score=score, doc_id=evidence.doc_id, question=question, method="FARM")
                         sentence.set_start_end(evidence.evidence_text)
                         evidence.add_sentence(sentence)
         return evidence_wrapper

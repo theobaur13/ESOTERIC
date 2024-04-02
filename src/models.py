@@ -17,6 +17,18 @@ class Evidence:
     def add_sentence(self, sentence):
         self.sentences.append(sentence)
 
+    def merge_overlapping_sentences(self):
+        self.sentences = sorted(self.sentences, key=lambda x: x.start)
+        merged_sentences = []
+        for sentence in self.sentences:
+            if merged_sentences and sentence.start <= merged_sentences[-1].end:
+                merged_sentences[-1].end = sentence.end
+                merged_sentences[-1].sentence += " " + sentence.sentence
+                merged_sentences[-1].score = max(merged_sentences[-1].score, sentence.score)
+            else:
+                merged_sentences.append(sentence)
+        self.sentences = merged_sentences
+
     def __str__(self):
         return f"Query: {self.query}\nDoc ID: {self.doc_id}\nDoc Score: {self.doc_score}\nEvidence Text: {self.evidence_text}\nSentences: {self.sentences}\nDoc Retrieval Method: {self.doc_retrieval_method}"
 
@@ -56,13 +68,14 @@ class EvidenceWrapper:
             return f"Query: {self.query}\nEvidences: {self.evidences}"
 
 class Sentence:
-    def __init__(self, sentence=None, score=0, doc_id=None, start=None, end=None, question=None):
+    def __init__(self, sentence=None, score=0, doc_id=None, start=None, end=None, question=None, method=None):
         self.doc_id = doc_id
         self.sentence = sentence
         self.score = score
         self.start = start
         self.end = end
         self.question = question
+        self.method = method
 
     def set_start_end(self, text):
         self.start = text.find(self.sentence)

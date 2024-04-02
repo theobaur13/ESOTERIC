@@ -33,6 +33,8 @@ def main():
         # Print evidence
         print("\n\033[1mBase claim: {}\033[0m".format(evidence_collection.get_claim()))
         for evidence in evidence_collection.get_evidences():
+            evidence.merge_overlapping_sentences()
+
             print("\nDoc ID:", evidence.doc_id)
             # print("Evidence Document:\n", evidence.evidence_text)
             print("Document Score:", str(evidence.doc_score))

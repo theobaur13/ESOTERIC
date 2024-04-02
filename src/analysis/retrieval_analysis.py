@@ -408,7 +408,8 @@ def skeleton(database_path, output_dir, preloaded_claim=None):
                     "score": str(sentence.score),
                     "start": sentence.start,
                     "end": sentence.end,
-                    "question": sentence.question
+                    "question": sentence.question,
+                    "method": sentence.method
                 })
             result["evidence"].append(to_append)
 

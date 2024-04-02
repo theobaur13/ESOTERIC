@@ -1,5 +1,6 @@
 import torch
 
+# These functions are unused in the current implementation of the project
 def extract_focals(nlp, text):
     print("Extracting focal points from text")
     doc = nlp(text)
