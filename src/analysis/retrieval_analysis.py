@@ -118,7 +118,7 @@ def initialiser(database_path, preloaded_claim=None):
             GROUP BY c.claim_id
         ''', (preloaded_claim,))
     else:
-        batch_limit = int(input("Enter index of maximum wiki-pages to load (default is all): "))
+        batch_limit = int(input("Enter index of maximum wiki-pages to load (default is all): ") or 109)
         difficult_subset = input("Would you like to test the difficult subset of claims? (y/n)\n")
         if difficult_subset == "y":
             cursor.execute(''' 

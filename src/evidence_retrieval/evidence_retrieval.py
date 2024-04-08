@@ -1,6 +1,5 @@
 import os
 import spacy
-from haystack import Answer
 from haystack.nodes import DensePassageRetriever
 from haystack.nodes import FARMReader
 from transformers import pipeline
@@ -12,7 +11,6 @@ from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 from tqdm import tqdm
 from rank_bm25 import BM25Okapi
-import re
 
 class EvidenceRetriever:
     def __init__(self, title_match_docs_limit=20, title_match_search_threshold=0, answerability_threshold=0.65, answerability_docs_limit=20, text_match_search_db_limit=1000, reader_threshold=0.7 ,questions=[]):
@@ -89,6 +87,7 @@ class EvidenceRetriever:
         doc_store = listdict_to_docstore(disambiguated_docs + textually_matched_docs)
 
         # Initialise retriever
+        print("Initialising DPR")
         retriever = DensePassageRetriever(
             document_store=doc_store,
             query_embedding_model="facebook/dpr-question_encoder-single-nq-base",

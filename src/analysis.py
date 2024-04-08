@@ -4,7 +4,7 @@ import logging
 import warnings
 from transformers.utils import logging as transformers_logging
 from analysis.retrieval_analysis import skeleton
-from analysis.retrieval_stats import method_performance
+from analysis.retrieval_stats import method_performance, plot_performance
 
 # Configure logging and warnings
 logging.basicConfig(level=logging.WARNING)
@@ -31,7 +31,7 @@ def main():
     if operation == "r":
         run_analysis(current_dir, output_dir)
     elif operation == "a":
-        analyse_results(current_dir)
+        analyse_results(output_dir)
     else:
         print("Invalid input. Please enter 'r' or 'a'.")
 
@@ -49,7 +49,8 @@ def run_analysis(current_dir, output_dir):
 def analyse_results(output_dir):
     data = load_data(output_dir, "retrieval_results.json")
 
-    method_performance(data)
+    # method_performance(data)
+    plot_performance(data)
 
 if __name__ == "__main__":
     main()

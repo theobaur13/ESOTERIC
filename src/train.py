@@ -1,8 +1,10 @@
 import os
 import time
-from transformers import pipeline, AutoModel, AutoTokenizer, DistilBertForSequenceClassification
+from transformers import pipeline, AutoModel, AutoTokenizer, DistilBertForSequenceClassification, DistilBertTokenizerFast, DistilBertForTokenClassification
 from train.relevancy_classification import create_relevancy_dataset, train_relevancy_model, evaluate_relevancy_model
 from train.span_extraction import create_span_dataset, train_span_model
+from train.question_generation import create_question_dataset, train_question_model
+from train.answer_extraction import train_answer_extraction_model
 
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -19,23 +21,29 @@ def main():
         num_claims = input("Enter the number of claims to use: ")
         num_claims = int(num_claims) if num_claims else 10000
 
-        train_type = input("Do you want to create a dataset for relevancy classification or span extraction? (r/s): ")
+        train_type = input("Do you want to create a dataset for: \nRelevancy classification (r)\nSpan extraction (s)\nQuestion generation (q)\n")
         if train_type == "r":
             create_relevancy_dataset(db_path, data_output_dir, limit=num_claims)
         elif train_type == "s":
             create_span_dataset(db_path, data_output_dir, limit=num_claims)
+        elif train_type == "q":
+            create_question_dataset(db_path, data_output_dir, limit=num_claims)
 
     model_creation = input("Do you want to train a new model? (y/n): ")
     if model_creation == "y":
-        train_type = input("Do you want to train a relevancy classification or span extraction model? (r/s): ")
+        train_type = input("Do you want to train a: \nRelevancy classification model (r)\nSpan extraction model (s)\nQuestion generation model (q)\nAnswer extraction model (a)\n")
         if train_type == "r":
             train_relevancy_model(dataset_file, relevancy_model_name, model_output_dir)
         elif train_type == "s":
             train_span_model(dataset_file, relevancy_model_name, model_output_dir)
+        elif train_type == "q":
+            train_question_model(dataset_file, relevancy_model_name, model_output_dir)
+        elif train_type == "a":
+            train_answer_extraction_model(model_output_dir)
 
     run_model = input("Do you want to run the model? (y/n): ")
     if run_model == "y":
-        train_type = input("Do you want to run a relevancy classification or span extraction model? (r/s): ")
+        train_type = input("Do you want to run a: \nRelevancy classification model (r)\nSpan extraction model (s)\nQuestion generation model (q)\nAnswer extraction model (a)\n")
         if train_type == "r":
             model = DistilBertForSequenceClassification.from_pretrained(model_output_dir)
             tokenizer = AutoTokenizer.from_pretrained(model_output_dir)
@@ -47,8 +55,17 @@ def main():
             result = pipe(input_pair)
             print("Inference time:", time.time() - start_time)
             print(result)
-        elif train_type == "s":
-            pass
+        elif train_type == "a":
+            model = DistilBertForTokenClassification.from_pretrained(model_output_dir)
+            tokenizer = DistilBertTokenizerFast.from_pretrained(model_output_dir)
+            pipe = pipeline('token-classification', model=model, tokenizer=tokenizer)
+            passage = "Charles Manson has been proven innocent of all crimes."
+            start_time = time.time()
+            results = pipe(passage)
+            print("Inference time:", time.time() - start_time)
+            for result in results:
+                if result['entity'] == 'LABEL_1':
+                    print(result['word'], result['score'])
 
     model_evaluation = input("Do you want to evaluate a model? (y/n): ")
     if model_evaluation == "y":
