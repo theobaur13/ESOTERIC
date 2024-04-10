@@ -1,5 +1,4 @@
 import re
-import torch
 
 # Retrieve documents with exact title match inc. docs with disambiguation in title
 def title_match_search(queries, es):

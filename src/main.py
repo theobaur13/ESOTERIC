@@ -23,6 +23,7 @@ def main():
     evidence_retriever = EvidenceRetriever(title_match_docs_limit=title_match_docs_limit, text_match_search_db_limit=text_match_search_db_limit, title_match_search_threshold=title_match_search_threshold, answerability_threshold=answerability_threshold, reader_threshold=reader_threshold)
 
     repeat = True
+    print("Welcome to FEVERISH! Fact Extraction and VERification with Intelligent Search Heuristics\n")
     while repeat:
         input_claim = input("Enter claim: ")
 
