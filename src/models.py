@@ -20,13 +20,35 @@ class Evidence:
     def merge_overlapping_sentences(self):
         self.sentences = sorted(self.sentences, key=lambda x: x.start)
         merged_sentences = []
+
         for sentence in self.sentences:
-            if merged_sentences and sentence.start <= merged_sentences[-1].end:
-                merged_sentences[-1].end = sentence.end
-                merged_sentences[-1].sentence += " " + sentence.sentence
-                merged_sentences[-1].score = max(merged_sentences[-1].score, sentence.score)
+            if not merged_sentences:
+                merged_sentences.append(Sentence(
+                    sentence=sentence.sentence,
+                    score=sentence.score,
+                    start=sentence.start,
+                    end=sentence.end
+                ))
             else:
-                merged_sentences.append(sentence)
+                last = merged_sentences[-1]
+                if sentence.start <= last.end:
+                    score = max(last.score, sentence.score)
+                    start = min(last.start, sentence.start)
+                    end = max(last.end, sentence.end)
+                    merged_sentence = Sentence(
+                        score=score,
+                        start=start,
+                        end=end,
+                        sentence = self.evidence_text[start:end]
+                    )
+                    merged_sentences[-1] = merged_sentence
+                else:
+                    merged_sentences.append(Sentence(
+                        sentence=sentence.sentence,
+                        score=sentence.score,
+                        start=sentence.start,
+                        end=sentence.end
+                    ))
         self.sentences = merged_sentences
 
     def __str__(self):
@@ -63,6 +85,21 @@ class EvidenceWrapper:
             evidence.sentences = sorted(evidence.sentences, key=lambda x: x.score, reverse=True)
 
         self.evidences = sorted(self.evidences, key=lambda x: x.sentences[0].score if x.sentences else 0, reverse=True)
+
+    def seperate_sort(self):
+        # Display documents containing passages first, ordered by their passage score, and then to display documents without passages, ordered by their document score
+        evidences_with_sentences = []
+        evidences_without_sentences = []
+        for evidence in self.evidences:
+            if evidence.sentences:
+                evidences_with_sentences.append(evidence)
+            else:
+                evidences_without_sentences.append(evidence)
+
+        evidences_with_sentences.sort(key=lambda x: max(sentence.score for sentence in x.sentences), reverse=True)
+        evidences_without_sentences.sort(key=lambda x: x.doc_score, reverse=True)
+
+        self.evidences = evidences_with_sentences + evidences_without_sentences
 
         def __str__(self):
             return f"Query: {self.query}\nEvidences: {self.evidences}"

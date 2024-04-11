@@ -11,6 +11,7 @@ from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 from tqdm import tqdm
 from rank_bm25 import BM25Okapi
+from sentence_transformers import SentenceTransformer, util
 
 class EvidenceRetriever:
     def __init__(self, title_match_docs_limit=20, title_match_search_threshold=0, answerability_threshold=0.65, answerability_docs_limit=20, text_match_search_db_limit=1000, reader_threshold=0.7 ,questions=[]):
@@ -39,6 +40,9 @@ class EvidenceRetriever:
         self.answer_extraction_pipe = pipeline("text2text-generation", model="vabatista/t5-small-answer-extraction-en")
         print("Evidence retriever initialised")
 
+        # Setup similarity model
+        self.sim_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2') 
+
     def retrieve_evidence(self, claim):
         # Retrieve evidence for a given query
         evidence = self.retrieve_documents(claim)
@@ -54,7 +58,9 @@ class EvidenceRetriever:
         print("Entities:", entities)
 
         # Retrieve documents with exact title match inc. docs with disambiguation in title and score them
+        print("Searching for titles containing keywords:", entities)
         title_match_docs = title_match_search(entities, self.es)
+        print("Scoring documents")
         title_match_docs = score_docs(title_match_docs, claim, self.nlp)
 
         # Split docs into title matched and disambiguated docs
@@ -66,6 +72,7 @@ class EvidenceRetriever:
         disambiguated_docs = [doc for doc in disambiguated_docs if doc['score'] > self.title_match_search_threshold]
 
         # Retrieve X documents where entity is mentioned in the text
+        print("Searching for documents containing keywords:", entities)
         textually_matched_docs = text_match_search(entities, self.es, self.text_match_search_db_limit)
 
         # Generate questions for each answer in the query
@@ -126,6 +133,10 @@ class EvidenceRetriever:
         return evidence_wrapper
 
     def retrieve_passages(self, evidence_wrapper):
+        def get_semantic_sim(self, claim, sentence):
+            embeddings = self.sim_model.encode([claim, sentence])
+            return util.cos_sim(embeddings[0], embeddings[1]).item()
+        
         # Retrieve passages using BM25 between the claim and evidence sentences
         print("Retrieving passages using BM25")
         claim = evidence_wrapper.get_claim()
@@ -170,7 +181,7 @@ class EvidenceRetriever:
             doc_id, original_text = sent_doc_ids_map[" ".join(cleaned)]
             for evidence in evidence_wrapper.get_evidences():
                 if evidence.doc_id == doc_id:
-                    sentence = Sentence(sentence=original, score=score, doc_id=doc_id, method="BM25")
+                    sentence = Sentence(sentence=original, score=get_semantic_sim(self, claim, original), doc_id=doc_id, method="BM25")
                     sentence.set_start_end(evidence.evidence_text)
                     evidence.add_sentence(sentence)
 
@@ -191,8 +202,8 @@ class EvidenceRetriever:
 
             for answer in results['answers']:
                 passage = answer.context
-                score = answer.score
                 id = answer.document_ids[0]
+                score = get_semantic_sim(self, claim, passage)
 
                 if score > self.reader_threshold:
                     evidence = evidence_wrapper.get_evidence_by_id(id)
