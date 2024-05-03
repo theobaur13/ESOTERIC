@@ -13,7 +13,7 @@ def main():
     claim_db_path = os.path.join(current_dir, '..', 'data')
     seed = "feverish"
     random.seed(seed)
-    system_input = input("Enter the system name code\n1 - FEVERISH 1\n3 - FEVERISH 3\n3.1 - FEVERISH 3.1\n 3.2 - FEVERISH 3.2\n 3.3 - FEVERISH 3.3\n 3.4 - FEVERISH 3.4\n 3.5 - FEVERISH 3.5\n 3.6 - FEVERISH 3.6\n 3.7 - FEVERISH 3.7\n final - Final version\n")
+    system_input = input("Enter the system name code\n1 - ESOTERIC 1\n3 - ESOTERIC 3\n3.1 - ESOTERIC 3.1\n 3.2 - ESOTERIC 3.2\n 3.3 - ESOTERIC 3.3\n 3.4 - ESOTERIC 3.4\n 3.5 - ESOTERIC 3.5\n 3.6 - ESOTERIC 3.6\n 3.7 - ESOTERIC 3.7\n final - Final version\n")
     if system_input == "1":
         FEVERISH_1(current_dir, claim_db_path, seed)
     elif system_input == "3":
