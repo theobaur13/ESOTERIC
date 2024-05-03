@@ -92,7 +92,7 @@ Create a `relevancy_classification` model inside the models directory.
 mkdir \models\relevancy_classification
 ```
 #### Downloading Premade Model
-If you do not want to train the model, simply download the model [files]() and paste the model files into the `relevancy_classification` directory.
+If you do not want to train the model, simply download the model [files](https://huggingface.co/theobaur/relevancy_classification_FEVER) and paste the model files into the `relevancy_classification` directory.
 The directory structure should be as follows:
 ```
 ESOTERIC
