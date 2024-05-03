@@ -16,7 +16,7 @@ Clone repository.
   
 
 ```bash
-git  clone  https://github.com/theobaur13/ESOTERIC
+git clone https://github.com/theobaur13/ESOTERIC
 ```
 
 Set up virtual environment.
@@ -48,7 +48,7 @@ Create `wiki-pages` directory inside `data` directory.
   
 
 ```
-mkdir \data\wiki-pages
+mkdir data\wiki-pages
 ```
 
 ### Elasticsearch Setup  
@@ -72,16 +72,16 @@ ESOTERIC
 ```
 
 Run `elasticsearch_loader.py`. The `batch_limit` argument specifies up to which wiki file to load up to (a `batch_limit` of 50 will load data from `wiki-001.jsonl` to `wiki-050.jsonl`). If `batch_limit` is left blank all wiki files will be loaded. 
-WARNING: Be aware that loading all 109 files can mean that embeddings take upwards of 35 hours on a V100 GPU to load.
 
-  
+__WARNING__: Be aware that loading all 109 files can mean that embeddings take upwards of 35 hours on a V100 GPU to load.
 
 ```python
 py elasticsearch_loader.py --batch_limit 109
 ```
 ### Loading Embeddings
-Either run `DPR_Embedding_Loader.ipynb` in a Google Colab instance or run `dpr_embedding_loader.py` locally (if you have a good GPU).
-NOTE: Expect this process to take around 20 minutes for each `wiki-XXX.jsonl` file loaded.
+Either run `DPR_Embedding_Loader.ipynb` in a Google Colab instance or run `dpr_embedding_loader.py` locally (if you have a good GPU). If using Google Colab but hosting the Elasticsearch database locally, you will need to send the embeddings from the Google Colab instance to your machine, we did this by setting up a tunnel to our local Elasticsearch server using [ngrok](https://ngrok.com/).
+
+__NOTE__: Expect this process to take around 20 minutes for each `wiki-XXX.jsonl` file loaded.
 ### Passage Retrieval Model
 The model can either be trained or downloaded. First create the `models` directory inside the root directory:
 ```
@@ -89,7 +89,7 @@ mkdir models
 ```
 Create a `relevancy_classification` model inside the models directory.
 ```
-mkdir \models\relevancy_classification
+mkdir models\relevancy_classification
 ```
 #### Downloading Premade Model
 If you do not want to train the model, simply download the model [files](https://huggingface.co/theobaur/relevancy_classification_FEVER) and paste the model files into the `relevancy_classification` directory.
@@ -116,7 +116,7 @@ ESOTERIC
 
 Create `claims` directory inside `data` directory.
 ```
-mkdir \data\claims
+mkdir data\claims
 ```
 Download [`shared_task_dev.jsonl`](https://fever.ai/download/fever/shared_task_dev.jsonl) and [`train.jsonl`](https://fever.ai/download/fever/train.jsonl) and copy into `claims` directory, which should appear as follows:
 ```
@@ -124,8 +124,8 @@ ESOTERIC
 │
 └───data
 ├───claims
-│ │ shared_task_dev.jsonl
-│ │ train.jsonl
+│   │ shared_task_dev.jsonl
+│   │ train.jsonl
 │
 └───wiki-pages
 ```
@@ -261,15 +261,15 @@ py legacy.py
 Choose a system version to analyse:
 ```
 Enter the system name code 
-1 - FEVERISH 1
-3 - FEVERISH 3
-3.1 - FEVERISH 3.1
-3.2 - FEVERISH 3.2
-3.3 - FEVERISH 3.3
-3.4 - FEVERISH 3.4
-3.5 - FEVERISH 3.5
-3.6 - FEVERISH 3.6
-3.7 - FEVERISH 3.7
+1 - ESOTERIC 1
+3 - ESOTERIC 3
+3.1 - ESOTERIC 3.1
+3.2 - ESOTERIC 3.2
+3.3 - ESOTERIC 3.3
+3.4 - ESOTERIC 3.4
+3.5 - ESOTERIC 3.5
+3.6 - ESOTERIC 3.6
+3.7 - ESOTERIC 3.7
 final - Final version
 ```
 Ensure to load the necessary data first before running each legacy system by entering *1*:
@@ -310,20 +310,6 @@ FEVER passage score: X%
 FEVER combined score: X%
 Execution average: Xs
 ```
-## Contributing
-
-  
-
-Pull requests are welcome. For major changes, please open an issue first
-
-to discuss what you would like to change.
-
-  
-
-Please make sure to update tests as appropriate.
-
-  
-
 ## License
 
   
