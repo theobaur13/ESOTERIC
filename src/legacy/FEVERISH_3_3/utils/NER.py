@@ -1,4 +1,5 @@
 def extract_entities(answer_pipe, NER_pipe, text):
+    
     # Extract entities from text through pipeline
     input = "extract entities: <ha> " + text + " <ha>"
     output = answer_pipe(input)
@@ -13,7 +14,7 @@ def extract_entities(answer_pipe, NER_pipe, text):
     # Extract entities from text through NER
     NER_results = NER_pipe(text)
     for entity in NER_results:
-        entity_string = str(entity['word'])
+        entity_string = entity['word']
 
         # For entities with a hyphen, remove spaces around hyphen, e.g. "Spider - man" -> "Spider-man"
         if "-" in entity_string:
@@ -34,4 +35,5 @@ def extract_entities(answer_pipe, NER_pipe, text):
 
     # Remove entities that contain hashtags and only contain numbers
     entities = [entity for entity in entities if "#" not in entity and not entity.isdigit()]
+
     return entities

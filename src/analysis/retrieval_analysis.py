@@ -134,7 +134,7 @@ def initialiser(database_path, preloaded_claim=None):
                 )
                 AND cd.doc_no BETWEEN 1 AND ?
                 GROUP BY c.claim_id
-                ORDER BY RANDOM()
+                -- ORDER BY RANDOM()
             ''' , (batch_limit, batch_limit))
         elif difficult_subset == "n":
             cursor.execute('''
@@ -143,7 +143,7 @@ def initialiser(database_path, preloaded_claim=None):
                 JOIN claim_docs cd ON c.claim_id = cd.claim_id
                                 AND cd.doc_no BETWEEN 1 AND ?
                 GROUP BY c.claim_id
-                ORDER BY RANDOM()
+                -- ORDER BY RANDOM()
             ''', (batch_limit,))
 
     # Initialise evidence retriever
@@ -160,8 +160,8 @@ def initialiser(database_path, preloaded_claim=None):
 
 def read_scores(ret_path):
     if not os.path.exists(ret_path):
-            with open(ret_path, 'w') as file:
-                json.dump([], file)
+        with open(ret_path, 'w') as file:
+            json.dump([], file)
 
     with open(ret_path, 'r') as file:
         data = json.load(file)

@@ -74,8 +74,8 @@ class EvidenceWrapper:
     def get_claim(self):
         return self.query
     
-    def remove_evidence(self, evidence):
-        self.evidences.remove(evidence)
+    def remove_evidence(self, id):
+        self.evidences = [evidence for evidence in self.evidences if evidence.id != id]
 
     def sort_by_doc_score(self):
         self.evidences = sorted(self.evidences, key=lambda x: x.doc_score, reverse=True)

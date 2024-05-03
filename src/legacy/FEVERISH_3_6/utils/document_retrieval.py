@@ -1,7 +1,10 @@
 import re
+import torch
 
 # Retrieve documents with exact title match inc. docs with disambiguation in title
 def title_match_search(queries, es):
+    print("Searching for titles containing keywords:", queries)
+
     # Convert query to lowercase and replace spaces with underscores
     formatted_queries = [query.replace(' ', '_').replace(':', '-COLON-').lower() for query in queries] 
 
@@ -42,6 +45,8 @@ def title_match_search(queries, es):
 
 
 def text_match_search(entities, es, limit=100):
+    print("Searching for documents containing keywords:", entities)
+
     # Retrieve documents from db containing query
     query_body = {
         "query": {
@@ -75,6 +80,8 @@ def text_match_search(entities, es, limit=100):
 
 # Score title matched and disambiguated docs
 def score_docs(docs, query, nlp):
+    print("Scoring documents")
+
     # Disambiguate documents with disambiguation in title e.g. "Frederick Trump (businessman)"
     disambiguated_docs = []
     for doc in docs:
@@ -159,5 +166,7 @@ def extract_polar_questions(nlp, pipe, claim):
 
         # remove any double spaces
         question = question.replace("  ", " ")
+        
         questions.append(question)
+
     return questions

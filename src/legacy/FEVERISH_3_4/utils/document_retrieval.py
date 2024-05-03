@@ -1,7 +1,12 @@
+import faiss
 import re
+import torch
+from pandas import DataFrame as df
 
 # Retrieve documents with exact title match inc. docs with disambiguation in title
 def title_match_search(queries, es):
+    print("Searching for titles containing keywords:", queries)
+
     # Convert query to lowercase and replace spaces with underscores
     formatted_queries = [query.replace(' ', '_').replace(':', '-COLON-').lower() for query in queries] 
 
@@ -36,19 +41,19 @@ def title_match_search(queries, es):
         id = hit['_id']
         doc_id = hit['_source']['doc_id']
         text = hit['_source']['content']
-        embedding = hit['_source']['embedding']
-        docs.append({"id" : id, "doc_id" : doc_id, "entity" : [query for query in queries if queries], "text" : text, "embedding" : embedding})
+        docs.append({"id" : id, "doc_id" : doc_id, "entity" : query, "text" : text})
     return docs
 
+def text_match_search(claim, queries, es, encoder, limit=100, k_lim=10):
+    print("Searching for documents containing keywords:", queries)
 
-def text_match_search(entities, es, limit=100):
     # Retrieve documents from db containing query
     query_body = {
         "query": {
             "bool": {
                 "should": [
-                    {"match_phrase": {"content": entity}}
-                    for entity in entities
+                    {"match_phrase": {"content": query}}
+                    for query in queries
                 ],
                 "minimum_should_match": 1
             }
@@ -63,18 +68,50 @@ def text_match_search(entities, es, limit=100):
     if len(rows) == 0:
         return []
     
-    # Add to docs
+    # Adjust rows to include id and doc_id
+    adjusted_rows = []
+    for row in rows:
+        id = row['_id']
+        doc_id = row['_source']['doc_id']
+        text = row['_source']['content']
+        adjusted_rows.append([id, doc_id, text])
+
+    # Convert rows to dataframe [id][doc_id][text]
+    data = df(adjusted_rows, columns=['id', 'doc_id', 'text'])
+
+    text = data['text'].tolist()
+    doc_count = len(text)
+
+    # Encode document texts and claim
+    text_vectors = encoder.encode(text)
+    claim_vector = encoder.encode([claim])
+
+    # Create FAISS dot product index and add document vectors
+    index = faiss.IndexFlatIP(text_vectors.shape[1])
+    index.add(text_vectors)
+
+    # Search for top 10 documents with highest similarity to claim
+    k = min(k_lim, doc_count)
+    top_k = index.search(claim_vector, k)
+
+    # Return dictionary of {"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match"}
     docs = []
-    for hit in rows:
-        id = hit['_id']
-        doc_id = hit['_source']['doc_id']
-        text = hit['_source']['content']
-        embedding = hit['_source']['embedding']
-        docs.append({"id" : id, "doc_id" : doc_id, "entity" : entities, "text" : text, "embedding" : embedding, "score": 0, "method": "text_match"})
+    for i in range(k):
+        doc_id = data['doc_id'][top_k[1][0][i]]
+        score = top_k[0][0][i]
+        id = data['id'][top_k[1][0][i]]
+        text = data['text'][top_k[1][0][i]]
+        docs.append({"id" : id, "doc_id" : doc_id, "score" : score, "method" : "text_match", "text" : text})
+
+    # Return sorted list of documents by score
+    docs = sorted(docs, key=lambda x: x['score'], reverse=True)
+
     return docs
 
 # Score title matched and disambiguated docs
 def score_docs(docs, query, nlp):
+    print("Scoring documents")
+
     # Disambiguate documents with disambiguation in title e.g. "Frederick Trump (businessman)"
     disambiguated_docs = []
     for doc in docs:
@@ -107,6 +144,23 @@ def score_docs(docs, query, nlp):
     # Combine exact match and disambiguated docs
     docs = docs + disambiguated_docs
     return docs
+
+def extract_focals(nlp, text):
+    print("Extracting focal points from text")
+    doc = nlp(text)
+
+    tag_set = {
+        "all": ["PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE", "DATE", "TIME", "PERCENT", "MONEY", "QUANTITY", "ORDINAL", "CARDINAL"],
+    }
+
+    active_tag_set = tag_set["all"]
+    focals = []
+
+    for entity in doc.ents:
+        if entity.label_ in active_tag_set:
+            focals.append({'focal': entity.text, 'type': entity.label_})
+
+    return focals
 
 def extract_answers(pipe, context):
     input = "extract answers: <ha> " + context + " <ha>"
@@ -159,5 +213,22 @@ def extract_polar_questions(nlp, pipe, claim):
 
         # remove any double spaces
         question = question.replace("  ", " ")
+        
         questions.append(question)
+
     return questions
+
+def calculate_answerability_score_SelfCheckGPT(tokeniser, model, context, question):
+    input_string = question + " " + tokeniser.sep_token + " " + context
+    encoded_input = tokeniser(input_string, return_tensors="pt", truncation=True)
+    prob = torch.sigmoid(model(**encoded_input).logits.squeeze(-1)).item()
+    return prob
+
+def calculate_answerability_score_tiny(nlp, context, question):
+    input = {
+        'question': question,
+        'context': context
+    }
+    output = nlp(input)
+    score = output['score']
+    return score

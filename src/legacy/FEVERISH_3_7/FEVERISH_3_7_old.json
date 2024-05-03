@@ -1,0 +1,434 @@
+[
+    {
+        "claim": "Chris Hemsworth appeared in A Perfect Getaway.",
+        "target": [
+            {
+                "doc_id": "Chris_Hemsworth",
+                "sent_id": "2",
+                "span_start": 142,
+                "span_end": 478
+            }
+        ],
+        "evidence": [
+            {
+                "doc_id": "Chris_Hemsworth",
+                "sentences": [
+                    {
+                        "sentence": "Hemsworth has also appeared in the science fiction action film Star Trek ( 2009 ), the thriller adventure A Perfect Getaway ( 2009 ), the horror comedy The Cabin in the Woods ( 2012 ), the dark-fantasy action film Snow White and the Huntsman ( 2012 ), the war film Red Dawn ( 2012 ), and the biographical sports drama film Rush ( 2013 ).   ",
+                        "score": "5.6744850930947175",
+                        "start": 205,
+                        "end": 545,
+                        "question": null,
+                        "method": "BM25"
+                    },
+                    {
+                        "sentence": "7 ) and Thor in the Marvel Cinematic Universe since 2011. Hemsworth has also appeared in the science fiction action film Star Trek ( 2009 ), the thriller adventure A Perfect Getaway ( 2009 ), the horror comedy The Cabin in the Woods ( 2012 ), the dar",
+                        "score": "0.9772005081176758",
+                        "start": 147,
+                        "end": 397,
+                        "question": "What movie did Chris Hemsworth appear in?",
+                        "method": "FARM"
+                    }
+                ],
+                "score": "1",
+                "method": "title_match",
+                "doc_hit": true,
+                "sentence_hit": true
+            },
+            {
+                "doc_id": "A_Perfect_Getaway",
+                "sentences": [
+                    {
+                        "sentence": "A Perfect Getaway is a 2009 American adventure psychological thriller film, written and directed by David Twohy, that stars Timothy Olyphant, Milla Jovovich, Kiele Sanchez, and Steve Zahn.",
+                        "score": "4.30894315459379",
+                        "start": 0,
+                        "end": 188,
+                        "question": null,
+                        "method": "BM25"
+                    },
+                    {
+                        "sentence": "erican adventure psychological thriller film, written and directed by David Twohy, that stars Timothy Olyphant, Milla Jovovich, Kiele Sanchez, and Steve Zahn. The film was originally shot in Puerto Rico and Hawaii and was released on August 7, 2009, ",
+                        "score": "0.9745097160339355",
+                        "start": 30,
+                        "end": 280,
+                        "question": "Who appeared in A Perfect Getaway?",
+                        "method": "FARM"
+                    }
+                ],
+                "score": "1",
+                "method": "title_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Vacation_-LRB-2015_film-RRB-",
+                "sentences": [
+                    {
+                        "sentence": "Vacation is a 2015 American comedy film written and directed by Jonathan Goldstein and John Francis Daley ( in their directorial debuts ). It stars Ed Helms, Christina Applegate, Skyler Gisondo, Steele Stebbins, Leslie Mann, Chris Hemsworth, Beverly ",
+                        "score": "0.7430170774459839",
+                        "start": 0,
+                        "end": 250,
+                        "question": "What movie did Chris Hemsworth appear in?",
+                        "method": "FARM"
+                    }
+                ],
+                "score": "0.6544991229308501",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Steve_Zahn",
+                "sentences": [
+                    {
+                        "sentence": "Riding in Cars with Boys ( 2001 ), Shattered Glass ( 2004 ), Rescue Dawn ( 2006 ), The Great Buck Howard ( 2008 ), A Perfect Getaway ( 2009 ), Dallas Buyers Club ( 2013 ), and Captain Fantastic ( 2016 ).",
+                        "score": "4.008372776861323",
+                        "start": 241,
+                        "end": 444,
+                        "question": null,
+                        "method": "BM25"
+                    }
+                ],
+                "score": "0.6505669087719326",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Timothy_Olyphant",
+                "sentences": [
+                    {
+                        "sentence": "He then had starring roles in the romantic comedy Catch and Release ( 2006 ), the action film Hitman ( 2007 ), the thriller A Perfect Getaway ( 2009 ) and the horror film The Crazies ( 2010 ).",
+                        "score": "4.535683913333503",
+                        "start": 650,
+                        "end": 842,
+                        "question": null,
+                        "method": "BM25"
+                    }
+                ],
+                "score": "0.6645421318947831",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Jadey_Duffield",
+                "sentences": [],
+                "score": "0.663590740430378",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Chris_Bender_-LRB-film_producer-RRB-",
+                "sentences": [
+                    {
+                        "sentence": "Wonderstone, starring Steve Carell and Jim Carrey, We 're the Millers, starring Jennifer Aniston and Jason Sudeikis, and Vacation '', a sequel to the original National Lampoon franchise, starring Ed Helms, Christina Applegate, and Chris Hemsworth, al",
+                        "score": "0.9591677784919739",
+                        "start": 925,
+                        "end": 1175,
+                        "question": "What movie did Chris Hemsworth appear in?",
+                        "method": "FARM"
+                    }
+                ],
+                "score": "0.6606443509585312",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Kim_Hyde",
+                "sentences": [],
+                "score": "0.6586600428376924",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Ivar_Kants",
+                "sentences": [
+                    {
+                        "sentence": "He has also appeared in Neighbours, Heartbreak High and in the TV movie The Plumber.",
+                        "score": "4.143180340988469",
+                        "start": 566,
+                        "end": 650,
+                        "question": null,
+                        "method": "BM25"
+                    }
+                ],
+                "score": "0.656123261578945",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Rush_-LRB-2013_film-RRB-",
+                "sentences": [],
+                "score": "0.656004969054465",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Blackhat_-LRB-film-RRB-",
+                "sentences": [],
+                "score": "0.6557061612302565",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            }
+        ],
+        "execution_time": 44.57700324058533
+    },
+    {
+        "claim": "Firefox is an application.",
+        "target": [
+            {
+                "doc_id": "Firefox",
+                "sent_id": "0",
+                "span_start": 0,
+                "span_end": 154
+            },
+            {
+                "doc_id": "Firefox",
+                "sent_id": "2",
+                "span_start": 0,
+                "span_end": 154
+            }
+        ],
+        "evidence": [
+            {
+                "doc_id": "Firefox",
+                "sentences": [],
+                "score": "1",
+                "method": "title_match",
+                "doc_hit": true,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "System_software",
+                "sentences": [
+                    {
+                        "sentence": "Yet from the perspective of functionality there is little difference between a word processing application and word processing web application.",
+                        "score": "3.5175143529259882",
+                        "start": 1514,
+                        "end": 1657,
+                        "question": null,
+                        "method": "BM25"
+                    },
+                    {
+                        "sentence": "Many operating systems bundle application software.",
+                        "score": "3.236285210283739",
+                        "start": 537,
+                        "end": 588,
+                        "question": null,
+                        "method": "BM25"
+                    }
+                ],
+                "score": "0.6899946267808011",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Data_store",
+                "sentences": [],
+                "score": "0.684863427227447",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Web_development_tools",
+                "sentences": [],
+                "score": "0.6841692927205408",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Asm.js",
+                "sentences": [],
+                "score": "0.6834854197427728",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Web_browser",
+                "sentences": [],
+                "score": "0.678150857275213",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "ProtoShare",
+                "sentences": [
+                    {
+                        "sentence": "ProtoShare is a collaborative software tool from Site9, Inc. used for creating, reviewing, and refining website, mobile and web application prototypes.",
+                        "score": "2.2637647296582966",
+                        "start": 0,
+                        "end": 151,
+                        "question": null,
+                        "method": "BM25"
+                    }
+                ],
+                "score": "0.6771173380050355",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Browser_security",
+                "sentences": [],
+                "score": "0.6748585711197801",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "RR_-LRB-debugging-RRB-",
+                "sentences": [],
+                "score": "0.6744818137496924",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Exploit_kit",
+                "sentences": [],
+                "score": "0.6741425912404357",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "AscentialTest",
+                "sentences": [
+                    {
+                        "sentence": "Users build automated test steps by interacting with graphical representations of the application under test.",
+                        "score": "2.612713097946955",
+                        "start": 183,
+                        "end": 292,
+                        "question": null,
+                        "method": "BM25"
+                    }
+                ],
+                "score": "0.6739002652172355",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Firefox_-LRB-disambiguation-RRB-",
+                "sentences": [],
+                "score": "0.7156152296621531",
+                "method": "disambiguation",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Firefox_OS",
+                "sentences": [
+                    {
+                        "sentence": "Firefox OS was designed to provide a complete, community-based alternative operating system, for running web applications directly or those installed from an application marketplace.",
+                        "score": "2.527125513226416",
+                        "start": 351,
+                        "end": 533,
+                        "question": null,
+                        "method": "BM25"
+                    }
+                ],
+                "score": "0.713836350357676",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "History_of_Firefox",
+                "sentences": [
+                    {
+                        "sentence": "The Mozilla Firefox project was created by Dave Hyatt and Blake Ross as an experimental branch of the Mozilla browser.   Firefox 1.0 was released on November 9, 2004, Firefox 1.5 was released on November 29, 2005, and version 2.0 was released on Octo",
+                        "score": "0.9398650527000427",
+                        "start": 0,
+                        "end": 250,
+                        "question": "What is an application called?",
+                        "method": "FARM"
+                    }
+                ],
+                "score": "0.708128557802621",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Firebug_-LRB-software-RRB-",
+                "sentences": [],
+                "score": "0.7078718803017808",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Swiftfox",
+                "sentences": [],
+                "score": "0.7070239703407201",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Xombrero",
+                "sentences": [],
+                "score": "0.7050677728455987",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Firefox_for_Android",
+                "sentences": [
+                    {
+                        "sentence": "Firefox for Android ( codenamed Fennec ) is the build of the Mozilla Firefox web browser for devices such as smartphones and tablet computers. Mozilla makes another mobile browser called Firefox for iOS, and for a while, Firefox for Android had a dif",
+                        "score": "0.7036492824554443",
+                        "start": 0,
+                        "end": 250,
+                        "question": "What is an application called?",
+                        "method": "FARM"
+                    }
+                ],
+                "score": "0.7039488459594394",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Waterfox",
+                "sentences": [],
+                "score": "0.7029644293072487",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            },
+            {
+                "doc_id": "Swiftweasel",
+                "sentences": [
+                    {
+                        "sentence": "Swiftweasel is a build of Mozilla Firefox source code, which uses non-trademarked graphics and logos. It is optimized for several architectures, and is available for the Linux platform only.   Released under the terms of the Mozilla Public License, S",
+                        "score": "0.9094637632369995",
+                        "start": 0,
+                        "end": 250,
+                        "question": "What is an application called?",
+                        "method": "FARM"
+                    }
+                ],
+                "score": "0.7028146495401375",
+                "method": "text_match",
+                "doc_hit": false,
+                "sentence_hit": false
+            }
+        ],
+        "execution_time": 30.310800552368164
+    }
+]

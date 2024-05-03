@@ -4,9 +4,9 @@ from haystack.nodes import DensePassageRetriever
 from haystack.nodes import FARMReader
 from transformers import pipeline, AutoModelForSeq2SeqLM, AutoTokenizer, DistilBertForSequenceClassification
 from models import Evidence, EvidenceWrapper, Sentence
-from evidence_retrieval.tools.document_retrieval import title_match_search, score_docs, text_match_search, extract_questions, extract_answers, extract_questions, extract_polar_questions
-from evidence_retrieval.tools.NER import extract_entities
-from evidence_retrieval.tools.docstore_conversion import listdict_to_docstore, wrapper_to_docstore
+from legacy.final_version.utils.document_retrieval import title_match_search, score_docs, text_match_search, extract_questions, extract_answers, extract_questions, extract_polar_questions
+from legacy.final_version.utils.NER import extract_entities
+from legacy.final_version.utils.docstore_conversion import listdict_to_docstore, wrapper_to_docstore
 from elasticsearch import Elasticsearch
 from dotenv import load_dotenv
 from tqdm import tqdm
@@ -45,7 +45,7 @@ class EvidenceRetriever:
 
         if self.use_relevancy_model:
             # Setup relevance classification model
-            relevance_classification_model_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'models', 'relevancy_classification')
+            relevance_classification_model_dir = os.path.join(os.path.dirname(__file__), 'models', 'relevancy_classification')
             relevance_classification_model = DistilBertForSequenceClassification.from_pretrained(relevance_classification_model_dir)
             relevance_classification_tokenizer = AutoTokenizer.from_pretrained(relevance_classification_model_dir)
             self.relevance_classification_tokenizer_pipe = pipeline('text-classification', model=relevance_classification_model, tokenizer=relevance_classification_tokenizer)

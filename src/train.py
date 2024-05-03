@@ -1,6 +1,6 @@
 import os
 import time
-from transformers import pipeline, AutoModel, AutoTokenizer, DistilBertForSequenceClassification, DistilBertTokenizerFast, DistilBertForTokenClassification, T5TokenizerFast, T5ForConditionalGeneration
+from transformers import pipeline, AutoModel, AutoTokenizer, DistilBertForSequenceClassification, DistilBertTokenizerFast, DistilBertForTokenClassification, T5TokenizerFast, T5ForConditionalGeneration, AutoModelForSeq2SeqLM, TrainerCallback
 from train.relevancy_classification import create_relevancy_dataset, train_relevancy_model, evaluate_relevancy_model
 from train.span_extraction import create_span_dataset, train_span_model
 from train.question_generation import create_question_dataset, train_question_model
@@ -60,7 +60,7 @@ def main():
             print("Inference time:", time.time() - start_time)
             print(result)
         elif train_type == "a":
-            extractor_model_type = input("Enter the type of model to use: \nDistilBERT (d)\nText2Text (t)\n")
+            extractor_model_type = input("Enter the type of model to use: \nDistilBERT (d)\nText2Text (t)\nFine-tuned (f)\n")
             if extractor_model_type == "d":
                 model_output_dir = os.path.join(current_dir, '..', 'models', 'answer_extraction')
                 model = DistilBertForTokenClassification.from_pretrained(model_output_dir)
@@ -74,15 +74,36 @@ def main():
                     if result['entity'] == 'LABEL_1':
                         print(result['word'], result['score'])
             elif extractor_model_type == "t":
-                model_output_dir = os.path.join(current_dir, '..', 'models', 'answer_extraction_t2t')
+                model_output_dir = os.path.join(current_dir, '..', 'models', 'answer_extraction_t2t_sentence')
                 model = T5ForConditionalGeneration.from_pretrained(model_output_dir)
                 tokenizer = T5TokenizerFast.from_pretrained(model_output_dir)
                 pipe = pipeline('text2text-generation', model=model, tokenizer=tokenizer)
-                passage = "Theodor Baur is German."
+                passage = "<s>Sean Penn is only ever a stage actor.</s>"
                 start_time = time.time()
                 results = pipe("extract answers: " + passage)
                 print("Inference time:", time.time() - start_time)
                 print(results)
+            elif extractor_model_type == "f":
+                model_output_dir = os.path.join(current_dir, '..', 'models', 'fine_tuned_answer_extraction')
+                model = AutoModelForSeq2SeqLM.from_pretrained(model_output_dir)
+                tokenizer = AutoTokenizer.from_pretrained(model_output_dir)
+                pipe = pipeline('text2text-generation', model=model, tokenizer=tokenizer)
+                
+                # passage = "Telemundo is a English-language television network."
+
+                loop = True
+                while loop:
+                    passage = input("Enter a passage: ")
+                    input_string = "extract answers: <ha>" + passage + "<ha>"
+                    print(input_string)
+                    start_time = time.time()
+                    results = pipe(input_string)
+                    print("Inference time:", time.time() - start_time)
+                    print(results)
+
+                    repeat = input("Do you want to repeat? (y/n)")
+                    if repeat == "n":
+                        loop = False
 
     model_evaluation = input("Do you want to evaluate a model? (y/n): ")
     if model_evaluation == "y":

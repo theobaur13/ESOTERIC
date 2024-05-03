@@ -1,7 +1,12 @@
+import faiss
 import re
+import torch
+from pandas import DataFrame as df
 
 # Retrieve documents with exact title match inc. docs with disambiguation in title
 def title_match_search(queries, es):
+    print("Searching for titles containing keywords:", queries)
+
     # Convert query to lowercase and replace spaces with underscores
     formatted_queries = [query.replace(' ', '_').replace(':', '-COLON-').lower() for query in queries] 
 
@@ -37,11 +42,13 @@ def title_match_search(queries, es):
         doc_id = hit['_source']['doc_id']
         text = hit['_source']['content']
         embedding = hit['_source']['embedding']
-        docs.append({"id" : id, "doc_id" : doc_id, "entity" : [query for query in queries if queries], "text" : text, "embedding" : embedding})
+        docs.append({"id" : id, "doc_id" : doc_id, "entity" : query, "text" : text, "embedding" : embedding})
     return docs
 
 
 def text_match_search(entities, es, limit=100):
+    print("Searching for documents containing keywords:", entities)
+
     # Retrieve documents from db containing query
     query_body = {
         "query": {
@@ -75,6 +82,8 @@ def text_match_search(entities, es, limit=100):
 
 # Score title matched and disambiguated docs
 def score_docs(docs, query, nlp):
+    print("Scoring documents")
+
     # Disambiguate documents with disambiguation in title e.g. "Frederick Trump (businessman)"
     disambiguated_docs = []
     for doc in docs:
@@ -107,6 +116,23 @@ def score_docs(docs, query, nlp):
     # Combine exact match and disambiguated docs
     docs = docs + disambiguated_docs
     return docs
+
+def extract_focals(nlp, text):
+    print("Extracting focal points from text")
+    doc = nlp(text)
+
+    tag_set = {
+        "all": ["PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE", "DATE", "TIME", "PERCENT", "MONEY", "QUANTITY", "ORDINAL", "CARDINAL"],
+    }
+
+    active_tag_set = tag_set["all"]
+    focals = []
+
+    for entity in doc.ents:
+        if entity.label_ in active_tag_set:
+            focals.append({'focal': entity.text, 'type': entity.label_})
+
+    return focals
 
 def extract_answers(pipe, context):
     input = "extract answers: <ha> " + context + " <ha>"
@@ -159,5 +185,22 @@ def extract_polar_questions(nlp, pipe, claim):
 
         # remove any double spaces
         question = question.replace("  ", " ")
+        
         questions.append(question)
+
     return questions
+
+def calculate_answerability_score_SelfCheckGPT(tokeniser, model, context, question):
+    input_string = question + " " + tokeniser.sep_token + " " + context
+    encoded_input = tokeniser(input_string, return_tensors="pt", truncation=True)
+    prob = torch.sigmoid(model(**encoded_input).logits.squeeze(-1)).item()
+    return prob
+
+def calculate_answerability_score_tiny(nlp, context, question):
+    input = {
+        'question': question,
+        'context': context
+    }
+    output = nlp(input)
+    score = output['score']
+    return score
