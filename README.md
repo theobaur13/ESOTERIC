@@ -1,6 +1,6 @@
 # ESOTERIC
 
-ESOTERIC - ElasticSearch Semantic Optimized Text Extraction Retrieval from Information Corpus
+ESOTERIC - Elasticsearch Semantic Optimized Text Extraction Retrieval from Information Corpus
 
 A command line application that uses natural language processing tools to retrieve relevant evidence sentences for a given input claim from the FEVER dataset.
 
