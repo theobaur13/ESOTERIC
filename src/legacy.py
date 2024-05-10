@@ -13,7 +13,7 @@ def main():
     claim_db_path = os.path.join(current_dir, '..', 'data')
     seed = "feverish"
     random.seed(seed)
-    system_input = input("Enter the system name code\n1 - ESOTERIC 1\n3 - ESOTERIC 3\n3.1 - ESOTERIC 3.1\n 3.2 - ESOTERIC 3.2\n 3.3 - ESOTERIC 3.3\n 3.4 - ESOTERIC 3.4\n 3.5 - ESOTERIC 3.5\n 3.6 - ESOTERIC 3.6\n 3.7 - ESOTERIC 3.7\n final - Final version\n")
+    system_input = input("Enter the system name code\n1 - ESOTERIC 1\n3 - ESOTERIC 3\n3.1 - ESOTERIC 3.1\n3.2 - ESOTERIC 3.2\n3.3 - ESOTERIC 3.3\n3.4 - ESOTERIC 3.4\n3.5 - ESOTERIC 3.5\n3.6 - ESOTERIC 3.6\n3.7 - ESOTERIC 3.7\nfinal - Final version\n")
     if system_input == "1":
         FEVERISH_1(current_dir, claim_db_path, seed)
     elif system_input == "3":
@@ -211,17 +211,3 @@ def final_version(current_dir, claim_db_path, seed):
 
 if __name__ == '__main__':
     main()
-    # current_dir = os.path.dirname(os.path.realpath(__file__))
-    # claim_db_path = os.path.join(current_dir, '..', 'data')
-    # wiki_db_path = os.path.join(current_dir, 'legacy', 'FEVERISH_3_3', 'data')
-    # output_dir = os.path.join(current_dir, 'legacy', 'FEVERISH_3_3')
-    # seed = "feverish"
-    # run_feverish_3_3(claim_db_path, wiki_db_path, output_dir, seed)
-
-    # wiki_db_path = os.path.join(current_dir, 'legacy', 'FEVERISH_3_7', 'data')
-    # output_dir = os.path.join(current_dir, 'legacy', 'FEVERISH_3_7')
-    # run_feverish_3_7(claim_db_path, wiki_db_path, output_dir, seed)
-    
-    # wiki_db_path = os.path.join(current_dir, 'legacy', 'FEVERISH_3_6', 'data')
-    # output_dir = os.path.join(current_dir, 'legacy', 'FEVERISH_3_6')
-    # run_feverish_3_6(claim_db_path, wiki_db_path, output_dir, seed)

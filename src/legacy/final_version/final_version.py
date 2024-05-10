@@ -14,11 +14,12 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer, util
 
 class EvidenceRetriever:
-    def __init__(self, title_match_docs_limit=20, title_match_search_threshold=0, answerability_threshold=0.65, answerability_docs_limit=20, text_match_search_db_limit=1000, reader_threshold=0.7 ,questions=[], use_relevancy_model=True):
+    def __init__(self, title_match_docs_limit=20, title_match_search_threshold=0, answerability_threshold=0.65, answerability_docs_limit=20, text_match_search_db_limit=1000, reader_threshold=0.7 ,questions=[], use_relevancy_model=True, use_polars=False):
         print ("Initialising evidence retriever")
 
         self.questions = questions
         self.use_relevancy_model = use_relevancy_model
+        self.use_polars = use_polars
 
         # Setup db connection and NLP models
         load_dotenv()
@@ -93,11 +94,12 @@ class EvidenceRetriever:
             self.questions.append(question)
             print("Question for answer '" + answer['focal'] + "':", question)
 
-        # Manually generate polar questions (yes/no questions)
-        polar_questions = extract_polar_questions(self.nlp, self.question_generation_pipe, claim)
-        for polar_question in polar_questions:
-            self.questions.append(polar_question)
-            print("Polar question:", polar_question)
+        if self.use_polars:
+            # Manually generate polar questions (yes/no questions)
+            polar_questions = extract_polar_questions(self.nlp, self.question_generation_pipe, claim)
+            for polar_question in polar_questions:
+                self.questions.append(polar_question)
+                print("Polar question:", polar_question)
 
         # For doc in both disambiguated and textually matched docs, add to doc store
         doc_store = listdict_to_docstore(disambiguated_docs + textually_matched_docs)

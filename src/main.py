@@ -37,7 +37,7 @@ def main():
         evidence_collection.seperate_sort()
         for evidence in evidence_collection.get_evidences():
             print("\nDoc ID:", evidence.doc_id)
-            # print("Evidence Document:\n", evidence.evidence_text)
+            print("Evidence Document:\n", evidence.evidence_text)
             print("Document Score:", str(evidence.doc_score))
             for sentence in evidence.sentences:
                 print("\tStart:", sentence.start, "End:", sentence.end)

@@ -92,7 +92,6 @@ def get_claims(seed, conn, batch_limit=200):
         JOIN claim_docs cd ON c.claim_id = cd.claim_id
         WHERE c.claim_id IN ({})
         GROUP BY c.claim_id
-        HAVING COUNT(DISTINCT cd.doc_id) <= 4
     '''.format(','.join('?' * len(random_claim_ids))), random_claim_ids)
     rows = cursor.fetchall()
     return rows
@@ -1128,17 +1127,26 @@ def run_feverish_3_6(claim_db_path, wiki_db_path, output_dir, seed):
 def analyze_feverish_3_6(json_path):
     document_recall = doc_recall(json_path)
     document_precision = doc_precision(json_path)
-    avg = execution_avg(json_path)
-    fever = FEVER_doc_score(json_path)
+    pass_recall = passage_recall(json_path)
+    pass_precision = passage_precision(json_path)
+    comb_recall = combined_recall(json_path)
+    comb_precision = combined_precision(json_path)
     method_analysis(json_path)
     print("Document recall:", (document_recall * 100), "%")
     print("Document precision:", (document_precision * 100), "%")
     print("Document F1 score:", f1_score(document_precision, document_recall) * 100, "%")
-    print("FEVER doc score:", (fever * 100), "%")
-    print("Execution average:", avg, "s")
+    print("Passage recall:", (pass_recall * 100), "%")
+    print("Passage precision:", (pass_precision * 100), "%")
+    print("Passage F1 score:", f1_score(pass_precision, pass_recall) * 100, "%")
+    print("Combined recall:", (comb_recall * 100), "%")
+    print("Combined precision:", (comb_precision * 100), "%")
+    print("Combined F1 score:", f1_score(comb_precision, comb_recall) * 100, "%")
+    print("FEVER doc score:", (FEVER_doc_score(json_path) * 100), "%")
+    print("FEVER passage score:", (FEVER_passage_score(json_path) * 100), "%" )
+    print("FEVER combined score:", (FEVER_combined_score(json_path) * 100), "%" )
+    print("Execution average:", execution_avg(json_path), "s")
     print("Average document length:", average_doc_length(json_path))
     print("Average position of document hits:", average_position_of_doc_hits_text_match(json_path))
-
 
 def run_feverish_3_7(claim_db_path, wiki_db_path, output_dir, seed):
     output_path = os.path.join(output_dir, 'FEVERISH_3_7.json')
